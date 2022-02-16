@@ -1,0 +1,32 @@
+<Project>
+	<PropertyGroup>
+		<Product>Qnit</Product>
+		<Authors>Qnit</Authors>
+		<Company>Qnit</Company>
+		<Copyright>Copyright © $(Company) $([System.DateTime]::Now.Year).All rights reserved.</Copyright>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<NoWarn>$(NoWarn);1591</NoWarn>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<!-- ATTN: SatelliteResourceLanguages does not work for test. See https://github.com/microsoft/vstest/issues/2057 -->
+		<SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
+		<EnableComHosting>false</EnableComHosting>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Using Include="System.Diagnostics.CodeAnalysis" />
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Meziantou.Analyzer" Version="1.0.688">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="AsyncFixer" Version="1.5.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+</Project>

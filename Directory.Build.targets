@@ -1,0 +1,5 @@
+<Project>
+	<PropertyGroup>
+		<IsPublishable Condition="$(AssemblyName.EndsWith('.Tests'))">false</IsPublishable>
+	</PropertyGroup>
+</Project>
