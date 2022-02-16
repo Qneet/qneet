@@ -324,7 +324,7 @@ internal struct TestIdProvider
             BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(4 * sizeof(uint)), m_h[4]);
         }
 
-        public void PadMessage(ref byte[] message, int length = 0)
+        internal void PadMessage(ref byte[] message, int length = 0)
         {
             if (m_messagePadded)
             {

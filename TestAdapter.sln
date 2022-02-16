@@ -5,13 +5,9 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit.TestAdapter", "src\Qnit.TestAdapter\Qnit.TestAdapter.csproj", "{FE7F1872-D1C9-45AD-8512-B5CD23DBFE13}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YASTF.TestAdapter.Implementations", "src\YASTF.TestAdapter.Implementations\YASTF.TestAdapter.Implementations.csproj", "{A75DF1CD-978B-41EB-8E03-2989DF8D9778}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "YASTF.TestAdapter.Implementations.Tests", "test\YASTF.TestAdapter.Implementations.Tests\YASTF.TestAdapter.Implementations.Tests.csproj", "{7734865C-4AE4-4F95-8BD6-605D922964A9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit.TestAdapter.Tests", "test\Qnit.TestAdapter.Tests\Qnit.TestAdapter.Tests.csproj", "{1D09A5E2-C539-48C3-BBC1-6326FC17F18C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qnit", "Qnit.Core\Qnit.csproj", "{78818183-B541-4FEB-9E90-2461A22AD623}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit", "Qnit.Core\Qnit.csproj", "{78818183-B541-4FEB-9E90-2461A22AD623}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,14 +19,6 @@ Global
 		{FE7F1872-D1C9-45AD-8512-B5CD23DBFE13}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE7F1872-D1C9-45AD-8512-B5CD23DBFE13}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE7F1872-D1C9-45AD-8512-B5CD23DBFE13}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A75DF1CD-978B-41EB-8E03-2989DF8D9778}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A75DF1CD-978B-41EB-8E03-2989DF8D9778}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A75DF1CD-978B-41EB-8E03-2989DF8D9778}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A75DF1CD-978B-41EB-8E03-2989DF8D9778}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7734865C-4AE4-4F95-8BD6-605D922964A9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7734865C-4AE4-4F95-8BD6-605D922964A9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7734865C-4AE4-4F95-8BD6-605D922964A9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7734865C-4AE4-4F95-8BD6-605D922964A9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1D09A5E2-C539-48C3-BBC1-6326FC17F18C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1D09A5E2-C539-48C3-BBC1-6326FC17F18C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1D09A5E2-C539-48C3-BBC1-6326FC17F18C}.Release|Any CPU.ActiveCfg = Release|Any CPU
