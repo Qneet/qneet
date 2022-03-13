@@ -40,6 +40,8 @@ internal readonly struct Discoverer
             {
                 var sourceAsUtf8Bytes = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(source));
 
+                var namespaceCache = new NamespaceCache(metadataReader);
+
                 var typeDefinitions = metadataReader.TypeDefinitions;
                 foreach (var typeHandle in typeDefinitions)
                 {
@@ -53,7 +55,7 @@ internal readonly struct Discoverer
                         var className = metadataReader.GetString(type.Name);
                         var classNameWithNamespace = type.Namespace.IsNil
                             ? className
-                            : string.Concat(metadataReader.GetString(type.Namespace), ".", className);
+                            : string.Concat(namespaceCache.GetName(type.Namespace), ".", className);
 
                         foreach (var methodHandle in type.GetMethods())
                         {
