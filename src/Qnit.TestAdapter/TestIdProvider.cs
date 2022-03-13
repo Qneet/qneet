@@ -112,7 +112,6 @@ internal struct TestIdProvider
     /// This implementation only works with messages with a length
     /// that is a multiple of the size of 8-bits.
     /// </remarks>
-   
     public struct Sha1Implementation
     {
         /*
@@ -124,7 +123,7 @@ internal struct TestIdProvider
 
         private int m_streamSize = 0;
         private bool m_messagePadded = false;
-        private readonly uint[] m_h = GC.AllocateUninitializedArray<uint>(5);
+        private readonly uint[] m_h = new uint[5];
 
         public Sha1Implementation()
         {
