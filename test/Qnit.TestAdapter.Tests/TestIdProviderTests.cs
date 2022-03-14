@@ -60,13 +60,13 @@ public static class TestIdProviderTests
         var expectedId = new Guid(data[0]);
 
         // Act
-        var idProvider = new TestIdProvider();
+        var idProvider = CreateTestIdProvider();
         foreach (var d in data.Skip(1))
         {
             idProvider.Append(d);
         }
 
-        var id = idProvider.GetId();
+        var id = idProvider.GetIdAndReset();
 
         // Assert
         Assert.Equal(expectedId, id);
@@ -135,11 +135,11 @@ public static class TestIdProviderTests
 #pragma warning disable CA1308 // Normalize strings to uppercase
         expected = expected.Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant();
 #pragma warning restore CA1308 // Normalize strings to uppercase
-        var idProvider = new TestIdProvider();
+        var idProvider = CreateTestIdProvider();
 
         // Act
         idProvider.Append(testName);
-        var actual = idProvider.GetId().ToString();
+        var actual = idProvider.GetIdAndReset().ToString();
 
         // Assert
         Assert.Equal(expected, actual);
@@ -148,7 +148,7 @@ public static class TestIdProviderTests
     private static void IdGeneration_TestRepetitionVector(string input, int repetition, string expected)
     {
         // Arrange
-        var idProvider = new TestIdProvider();
+        var idProvider = CreateTestIdProvider();
 
         // Act
         for (var i = 0; i < repetition; i++)
@@ -156,9 +156,11 @@ public static class TestIdProviderTests
             idProvider.Append(input);
         }
 
-        var id = idProvider.GetId().ToString();
+        var id = idProvider.GetIdAndReset().ToString();
 
         // Assert
         Assert.Equal(expected, id);
     }
+
+    private static TestIdProvider CreateTestIdProvider() => new();
 }

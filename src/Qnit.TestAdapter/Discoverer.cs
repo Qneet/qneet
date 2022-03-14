@@ -39,6 +39,7 @@ internal readonly struct Discoverer
             if (metadataReader.IsAssembly)
             {
                 var sourceAsUtf8Bytes = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(source));
+                var idProvider = new TestIdProvider();
 
                 var namespaceCache = new NamespaceCache(metadataReader);
 
@@ -72,7 +73,6 @@ internal readonly struct Discoverer
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedTypeProperty, classNameWithNamespace);
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedMethodProperty, methodName);
 
-                                var idProvider = new TestIdProvider();
                                 idProvider.Append(ExecutorUri.Utf8Bytes.Span);
                                 idProvider.Append(sourceAsUtf8Bytes);
                                 idProvider.Append(nsUtf8Bytes);
@@ -81,7 +81,7 @@ internal readonly struct Discoverer
                                 idProvider.Append(DotChar);
                                 idProvider.Append(methodNameUtf8Bytes);
 
-                                testCase.Id = idProvider.GetId();
+                                testCase.Id = idProvider.GetIdAndReset();
 
                                 testCaseCollector.AddTestCase(testCase);
                             }
