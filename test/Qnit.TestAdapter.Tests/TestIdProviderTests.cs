@@ -1,3 +1,4 @@
+using System.Text;
 using Xunit;
 
 namespace Qnit.TestAdapter.Tests;
@@ -151,9 +152,10 @@ public static class TestIdProviderTests
         var idProvider = CreateTestIdProvider();
 
         // Act
+        ReadOnlySpan<byte> buffer = Encoding.Unicode.GetBytes(input).AsSpan();
         for (var i = 0; i < repetition; i++)
         {
-            idProvider.Append(input);
+            idProvider.Append(buffer);
         }
 
         var id = idProvider.GetIdAndReset().ToString();
