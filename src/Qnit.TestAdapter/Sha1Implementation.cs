@@ -26,7 +26,11 @@ internal struct Sha1Implementation
      * For more information please refer to https://tools.ietf.org/html/rfc3174.
      */
 
-    private uint[] m_h;
+    private uint m_h0;
+    private uint m_h1;
+    private uint m_h2;
+    private uint m_h3;
+    private uint m_h4;
     private byte[] m_lastBlock;
 
     private int m_count0;
@@ -35,11 +39,15 @@ internal struct Sha1Implementation
     public Sha1Implementation()
     {
         m_lastBlock = new byte[BlockBytes];
-        m_h = new uint[5];
         m_count0 = 0;
         m_count1 = 0;
 
-        Reset();
+        // as defined in https://tools.ietf.org/html/rfc3174#section-6.1
+        m_h0 = 0x67452301u;
+        m_h1 = 0xEFCDAB89u;
+        m_h2 = 0x98BADCFEu;
+        m_h3 = 0x10325476u;
+        m_h4 = 0xC3D2E1F0u;
     }
 
     internal void Reset()
@@ -48,20 +56,20 @@ internal struct Sha1Implementation
         m_count1 = 0;
 
         // as defined in https://tools.ietf.org/html/rfc3174#section-6.1
-        m_h[0] = 0x67452301u;
-        m_h[1] = 0xEFCDAB89u;
-        m_h[2] = 0x98BADCFEu;
-        m_h[3] = 0x10325476u;
-        m_h[4] = 0xC3D2E1F0u;
+        m_h0 = 0x67452301u;
+        m_h1 = 0xEFCDAB89u;
+        m_h2 = 0x98BADCFEu;
+        m_h3 = 0x10325476u;
+        m_h4 = 0xC3D2E1F0u;
     }
 
     private void Transform(ref uint block)
     {
-        var e = m_h[4];
-        var d = m_h[3];
-        var c = m_h[2];
-        var b = m_h[1];
-        var a = m_h[0];
+        var e = m_h4;
+        var d = m_h3;
+        var c = m_h2;
+        var b = m_h1;
+        var a = m_h0;
 
         /* 4 rounds of 20 operations each. Loop unrolled. */
         R0(ref block, a, ref b, c, d, ref e, 0); R0(ref block, e, ref a, b, c, ref d, 1);
@@ -109,11 +117,11 @@ internal struct Sha1Implementation
         R4(ref block, e, ref a, b, c, ref d, 12); R4(ref block, d, ref e, a, b, ref c, 13);
         R4(ref block, c, ref d, e, a, ref b, 14); R4(ref block, b, ref c, d, e, ref a, 15);
 
-        m_h[4] += e;
-        m_h[3] += d;
-        m_h[2] += c;
-        m_h[1] += b;
-        m_h[0] += a;
+        m_h4 += e;
+        m_h3 += d;
+        m_h2 += c;
+        m_h1 += b;
+        m_h0 += a;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -261,11 +269,11 @@ internal struct Sha1Implementation
         }
         ProcessBlock(finalCount);
 
-        BinaryPrimitives.WriteUInt32BigEndian(digest, m_h[0]);
-        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(1 * sizeof(uint)), m_h[1]);
-        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(2 * sizeof(uint)), m_h[2]);
-        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(3 * sizeof(uint)), m_h[3]);
-        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(4 * sizeof(uint)), m_h[4]);
+        BinaryPrimitives.WriteUInt32BigEndian(digest, m_h0);
+        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(1 * sizeof(uint)), m_h1);
+        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(2 * sizeof(uint)), m_h2);
+        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(3 * sizeof(uint)), m_h3);
+        BinaryPrimitives.WriteUInt32BigEndian(digest.Slice(4 * sizeof(uint)), m_h4);
     }
 
     public void ComputeHash(ReadOnlySpan<byte> message, Span<byte> digest)
