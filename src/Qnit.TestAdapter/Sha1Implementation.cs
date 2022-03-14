@@ -130,11 +130,11 @@ internal struct Sha1Implementation
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint Blk(ref uint blockRef, int i)
     {
-        ref var oldValue = ref Unsafe.Add(ref blockRef, i & 15);
+        ref var oldValue = ref Unsafe.Add(ref blockRef, (nint)i & 15);
         var value = BitOperations.RotateLeft(
-            Unsafe.Add(ref blockRef, (i + 13) & 15)
-            ^ Unsafe.Add(ref blockRef, (i + 8) & 15) 
-            ^ Unsafe.Add(ref blockRef, (i + 2) & 15)
+            Unsafe.Add(ref blockRef, (nint)((i + 13) & 15))
+            ^ Unsafe.Add(ref blockRef, (nint)((i + 8) & 15))
+            ^ Unsafe.Add(ref blockRef, (nint)((i + 2) & 15))
             ^ oldValue, 1);
 
         oldValue = value;
@@ -202,22 +202,22 @@ internal struct Sha1Implementation
         var partLen = BlockBytes - index;
 
         /* Transform as many times as possible. */
+        var lastBlockSpan = m_lastBlock.AsSpan();
         var i = 0;
         if (message.Length >= partLen)
         {
+            ref var lastBlockUint = ref AsUintReference(lastBlockSpan);
             if (index != 0)
             {
-                message.Slice(0, partLen).CopyTo(m_lastBlock.AsSpan(index));
-                ref var block = ref MemoryMarshal.GetReference(MemoryMarshal.Cast<byte, uint>(m_lastBlock));
-                Transform(ref block);
+                SliceUnsafe(message, 0, partLen).CopyTo(lastBlockSpan.Slice(index));
+                Transform(ref lastBlockUint);
                 i = partLen;
             }
 
             for (; i + 63 < message.Length; i += BlockBytes)
             {
-                message.Slice(i, BlockBytes).CopyTo(m_lastBlock);
-                ref var block = ref MemoryMarshal.GetReference(MemoryMarshal.Cast<byte, uint>(m_lastBlock));
-                Transform(ref block);
+                SliceUnsafe(message,i, BlockBytes).CopyTo(lastBlockSpan);
+                Transform(ref lastBlockUint);
             }
 
             if (message.Length == i)
@@ -227,7 +227,19 @@ internal struct Sha1Implementation
         }
 
         /* Buffer remaining input */
-        message.Slice(i, message.Length - i).CopyTo(m_lastBlock.AsSpan(index));
+        message.Slice(i, message.Length - i).CopyTo(lastBlockSpan.Slice(index));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static unsafe ref uint AsUintReference(Span<byte> source)
+    {
+        return ref Unsafe.AsRef<uint>(Unsafe.AsPointer(ref MemoryMarshal.GetReference(source)));
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ReadOnlySpan<byte> SliceUnsafe(ReadOnlySpan<byte> source, int start, int length)
+    {
+        return MemoryMarshal.CreateReadOnlySpan(ref Unsafe.Add(ref MemoryMarshal.GetReference(source), (nint)start /* force zero-extension */), length);
     }
 
     public unsafe void ProcessFinalBlock(Span<byte> digest)
