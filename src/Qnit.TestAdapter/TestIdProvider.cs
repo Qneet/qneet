@@ -48,10 +48,10 @@ internal struct TestIdProvider
 
     private Guid GetId()
     {
-        Span<byte> toGuid = stackalloc byte[Sha1Implementation.DigestBytes];
+        Span<byte> digest = stackalloc byte[Sha1Implementation.DigestBytes];
 
-        m_hasher.ProcessFinalBlock(toGuid);
-        return new Guid(toGuid.Slice(0, 16));
+        m_hasher.ProcessFinalBlock(digest);
+        return new Guid(digest.Slice(0, 16));
     }
 
     private void Reset()
