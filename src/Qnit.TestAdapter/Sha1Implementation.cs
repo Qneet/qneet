@@ -55,18 +55,13 @@ internal struct Sha1Implementation
         m_h[4] = 0xC3D2E1F0u;
     }
 
-    private void Transform(ReadOnlySpan<byte> message)
+    private void Transform(ref uint block)
     {
         var e = m_h[4];
         var d = m_h[3];
         var c = m_h[2];
         var b = m_h[1];
         var a = m_h[0];
-
-        Span<byte> buffer = stackalloc byte[BlockBytes];
-        message.Slice(0, BlockBytes).CopyTo(buffer);
-
-        ref var block = ref MemoryMarshal.GetReference(MemoryMarshal.Cast<byte, uint>(buffer));
 
         /* 4 rounds of 20 operations each. Loop unrolled. */
         R0(ref block, a, ref b, c, d, ref e, 0); R0(ref block, e, ref a, b, c, ref d, 1);
@@ -213,13 +208,16 @@ internal struct Sha1Implementation
             if (index != 0)
             {
                 message.Slice(0, partLen).CopyTo(m_lastBlock.AsSpan(index));
-                Transform(m_lastBlock);
+                ref var block = ref MemoryMarshal.GetReference(MemoryMarshal.Cast<byte, uint>(m_lastBlock));
+                Transform(ref block);
                 i = partLen;
             }
 
             for (; i + 63 < message.Length; i += BlockBytes)
             {
-                Transform(message.Slice(i));
+                message.Slice(i, BlockBytes).CopyTo(m_lastBlock);
+                ref var block = ref MemoryMarshal.GetReference(MemoryMarshal.Cast<byte, uint>(m_lastBlock));
+                Transform(ref block);
             }
 
             if (message.Length == i)
