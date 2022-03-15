@@ -119,9 +119,9 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
         };
         try
         {
-            var type = m_assembly.GetType((string)m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty), false);
+            var type = m_assembly.GetType(m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty), false);
             var methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
-            var method = type.GetMethod((string)m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty), methodBindingFlags);
+            var method = type.GetMethod(m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty), methodBindingFlags);
             m_frameworkHandle.RecordStart(m_testCase);
 
             testResult.StartTime = DateTimeOffset.Now;
@@ -138,10 +138,12 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
                     method.Invoke(instance, Array.Empty<object>());
                 }
 
+                testResult.Duration = stopWatch.GetElapsedTime();
                 testResult.Outcome = TestOutcome.Passed;
             }
             catch (TargetInvocationException e)
             {
+                testResult.Duration = stopWatch.GetElapsedTime();
                 testResult.Outcome = TestOutcome.Failed;
                 if (e.InnerException != null)
                 {
@@ -157,12 +159,12 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
             }
             catch (Exception e)
             {
+                testResult.Duration = stopWatch.GetElapsedTime();
                 testResult.Outcome = TestOutcome.Failed;
                 testResult.ErrorMessage = e.Message;
                 testResult.ErrorStackTrace = e.StackTrace;
             }
 
-            testResult.Duration = stopWatch.GetElapsedTime();
             m_frameworkHandle.RecordEnd(m_testCase, testResult.Outcome);
             testResult.EndTime = DateTimeOffset.Now;
 
