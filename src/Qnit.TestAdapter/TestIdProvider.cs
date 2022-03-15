@@ -9,12 +9,17 @@ namespace Qnit.TestAdapter;
 [StructLayout(LayoutKind.Auto)]
 internal struct TestIdProvider
 {
+    [StructLayout(LayoutKind.Sequential, Size = Sha1Implementation.DigestBytes)]
+    private struct Buffer20 { }
+
     // should not be readonly
     private Sha1Implementation m_hasher;
+    private Buffer20 m_digestBuffer;
 
     public TestIdProvider()
     {
         m_hasher = new Sha1Implementation();
+        Unsafe.SkipInit(out m_digestBuffer);
     }
 
     public void Append(string str)
@@ -50,8 +55,7 @@ internal struct TestIdProvider
 
     private Guid GetId()
     {
-        Span<byte> digest = stackalloc byte[Sha1Implementation.DigestBytes];
-
+        var digest = MemoryMarshal.CreateSpan(ref Unsafe.As<Buffer20, byte>(ref m_digestBuffer), Sha1Implementation.DigestBytes);
         m_hasher.ProcessFinalBlock(digest);
         return new Guid(digest.Slice(0, 16));
     }
