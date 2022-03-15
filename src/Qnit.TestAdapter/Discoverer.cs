@@ -10,7 +10,7 @@ namespace Qnit.TestAdapter;
 
 internal readonly struct Discoverer
 {
-    // Suffix Tests
+    // Suffix "Tests"
     private static ReadOnlyMemory<byte> s_testSuffixBytes => new(new byte[] { 54, 64, 73, 74, 73});
     private const string TestsSuffix = "Tests";
 
@@ -38,7 +38,7 @@ internal readonly struct Discoverer
             var metadataReader = peReader.GetMetadataReader();
             if (metadataReader.IsAssembly)
             {
-                var sourceAsUtf8Bytes = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(source));
+                var sourceUtf8Bytes = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(source));
                 var idProvider = new TestIdProvider();
 
                 var namespaceCache = new NamespaceCache(metadataReader);
@@ -50,7 +50,7 @@ internal readonly struct Discoverer
 
                     if (IsTestClass(type) && EndWithTests(metadataReader, type.Name))
                     {
-                        var nsUtf8Bytes = metadataReader.GetReadOnlySpanSpan(type.Namespace);
+                        var namespaceUtf8Bytes = metadataReader.GetReadOnlySpanSpan(type.Namespace);
                         var classNameUtf8Bytes = metadataReader.GetReadOnlySpanSpan(type.Name);
 
                         var className = metadataReader.GetString(type.Name);
@@ -74,8 +74,8 @@ internal readonly struct Discoverer
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedMethodProperty, methodName);
 
                                 idProvider.Append(ExecutorUri.Utf8Bytes.Span);
-                                idProvider.Append(sourceAsUtf8Bytes);
-                                idProvider.Append(nsUtf8Bytes);
+                                idProvider.Append(sourceUtf8Bytes);
+                                idProvider.Append(namespaceUtf8Bytes);
                                 idProvider.Append(DotChar);
                                 idProvider.Append(classNameUtf8Bytes);
                                 idProvider.Append(DotChar);
