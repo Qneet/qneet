@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using Xunit;
@@ -94,9 +96,6 @@ public static class Sha1ImplTests
     private static void SHA1_TestVector(string message, string expected)
     {
         // Arrange
-#pragma warning disable CA1308 // Normalize strings to uppercase
-        expected = expected.Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant();
-#pragma warning restore CA1308 // Normalize strings to uppercase
         var shaHasher1 = new Sha1Implementation();
 
         // Act
@@ -109,18 +108,14 @@ public static class Sha1ImplTests
         Assert.Equal(expected, digest1);
     }
 
-    [SuppressMessage("Security", "CA5350:Do Not Use Weak Cryptographic Algorithms", Justification = "<Pending>")]
     private static void SHA1_TestRepetitionVector(char input, int repetition, string? expected = null)
     {
         // Arrange
         var shaHasher1 = new Sha1Implementation();
         var shaHasher2 = new Sha1Implementation();
 
-        var bytes = GC.AllocateUninitializedArray<byte>(repetition);
-        for (var i = 0; i < repetition; i++)
-        {
-            bytes[i] = (byte)input;
-        }
+        var bytes = GC.AllocateUninitializedArray<byte>(repetition).AsSpan();
+        Unsafe.InitBlock(ref MemoryMarshal.GetReference(bytes), (byte)input, (uint)repetition);
 
         if (string.IsNullOrEmpty(expected))
         {
@@ -132,22 +127,15 @@ public static class Sha1ImplTests
         shaHasher1.ComputeHash(bytes, hash1);
         var digest1 = ToHex(hash1);
         var blocks = bytes.Length / Sha1Implementation.BlockBytes;
-        var block = new byte[Sha1Implementation.BlockBytes];
-        var spanBytes = bytes.AsSpan();
         for (var i = 0; i < blocks; i += 1)
         {
-            spanBytes.Slice(0, block.Length).CopyTo(block);
-            shaHasher2.ProcessBlock(block);
-            spanBytes = spanBytes.Slice(block.Length);
+            shaHasher2.ProcessBlock(bytes.Slice(0, Sha1Implementation.BlockBytes));
+            bytes = bytes.Slice(Sha1Implementation.BlockBytes);
         }
 
-        var rest = spanBytes.Length;
-        if (rest != 0)
+        if (bytes.Length != 0)
         {
-            block = new byte[rest];
-            spanBytes.CopyTo(block);
-            //shaHasher2.PadMessage(ref block, block.Length);
-            shaHasher2.ProcessBlock(block);
+            shaHasher2.ProcessBlock(bytes);
         }
 
         Span<byte> hash2 = stackalloc byte[Sha1Implementation.DigestBytes];
