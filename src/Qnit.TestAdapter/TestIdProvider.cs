@@ -5,7 +5,6 @@ using System.Text;
 
 namespace Qnit.TestAdapter;
 
-[SkipLocalsInit]
 [StructLayout(LayoutKind.Auto)]
 internal struct TestIdProvider
 {

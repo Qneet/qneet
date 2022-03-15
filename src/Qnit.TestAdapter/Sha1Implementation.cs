@@ -12,7 +12,6 @@ namespace Qnit.TestAdapter;
 /// This implementation only works with messages with a length
 /// that is a multiple of the size of 8-bits.
 /// </remarks>
-[SkipLocalsInit]
 [StructLayout(LayoutKind.Auto)]
 internal struct Sha1Implementation
 {
