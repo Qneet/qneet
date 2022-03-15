@@ -79,6 +79,11 @@ public sealed class VsTestExecutor : ITestExecutor
         var asm = Assembly.LoadFile(source);
         foreach (var test in tests)
         {
+            if (cancellationToken.IsCancellationRequested)
+            {
+                break;
+            }
+
             countdownEvent.AddCount();
             var executor = new TestCaseExecutor(asm, test, frameworkHandle, countdownEvent, cancellationToken);
             //executor.Execute();
@@ -113,12 +118,19 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "<Pending>")]
     public void Execute()
     {
-        var testResult = new TestResult(m_testCase)
-        {
-            DisplayName = m_testCase.DisplayName,
-        };
         try
         {
+            if (m_cancellationToken.IsCancellationRequested)
+            {
+                // skip running test
+                return;
+            }
+
+            var testResult = new TestResult(m_testCase)
+            {
+                DisplayName = m_testCase.DisplayName,
+            };
+
             var type = m_assembly.GetType(m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty), false);
             var methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
             var method = type.GetMethod(m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty), methodBindingFlags);
