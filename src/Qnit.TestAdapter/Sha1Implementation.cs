@@ -13,6 +13,7 @@ namespace Qnit.TestAdapter;
 /// that is a multiple of the size of 8-bits.
 /// </remarks>
 [SkipLocalsInit]
+[StructLayout(LayoutKind.Auto)]
 internal struct Sha1Implementation
 {
     [StructLayout(LayoutKind.Sequential, Size = BlockBytes)]
