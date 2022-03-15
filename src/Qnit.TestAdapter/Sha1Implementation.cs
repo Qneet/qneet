@@ -15,10 +15,34 @@ namespace Qnit.TestAdapter;
 [SkipLocalsInit]
 internal struct Sha1Implementation
 {
+    [StructLayout(LayoutKind.Sequential, Size = BlockBytes)]
+    private struct Buffer512
+    {
+        /*private int m_0;
+        private int m_1;
+        private int m_2;
+        private int m_3;
+
+        private int m_4;
+        private int m_5;
+        private int m_6;
+        private int m_7;
+
+        private int m_8;
+        private int m_9;
+        private int m_10;
+        private int m_11;
+
+        private int m_12;
+        private int m_13;
+        private int m_14;
+        private int m_15;*/
+    }
+
     private const int BlockBits = 512;
     private const int DigestBits = 160;
-    public const int BlockBytes = BlockBits / 8;
-    public const int DigestBytes = DigestBits / 8;
+    internal const int BlockBytes = BlockBits / 8;
+    internal const int DigestBytes = DigestBits / 8;
     /*
      * Many of the variable, function and parameter names in this code
      * were used because those were the names used in the publication.
@@ -31,14 +55,14 @@ internal struct Sha1Implementation
     private uint m_h2;
     private uint m_h3;
     private uint m_h4;
-    private byte[] m_lastBlock;
+    private Buffer512 m_lastBlock;
 
     private int m_count0;
     private int m_count1;
 
     public Sha1Implementation()
     {
-        m_lastBlock = new byte[BlockBytes];
+        m_lastBlock = new Buffer512();
         m_count0 = 0;
         m_count1 = 0;
 
@@ -138,7 +162,7 @@ internal struct Sha1Implementation
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint Blk(ref uint blockRef, int i)
     {
-        ref var oldValue = ref Unsafe.Add(ref blockRef, (nint)i & 15);
+        ref var oldValue = ref Unsafe.Add(ref blockRef, i & 15);
         var value = BitOperations.RotateLeft(
             Unsafe.Add(ref blockRef, (i + 13) & 15)
             ^ Unsafe.Add(ref blockRef, (i + 8) & 15)
@@ -205,12 +229,12 @@ internal struct Sha1Implementation
         var partLen = BlockBytes - index;
 
         /* Transform as many times as possible. */
-        ref var lastBlockRef = ref MemoryMarshal.GetArrayDataReference(m_lastBlock);
+        ref var lastBlockRef = ref Unsafe.As<Buffer512, byte>(ref m_lastBlock);
         ref var messageRef = ref MemoryMarshal.GetReference(message);
         var i = 0;
         if (message.Length >= partLen)
         {
-            ref var lastBlockUintRef = ref AsUintReference(ref lastBlockRef);
+            ref var lastBlockUintRef = ref Unsafe.As<Buffer512, uint>(ref m_lastBlock);
             if (index != 0)
             {
                 Unsafe.CopyBlockUnaligned(ref Unsafe.Add(ref lastBlockRef, index), ref messageRef, (uint)partLen);
@@ -235,12 +259,6 @@ internal struct Sha1Implementation
             ref Unsafe.Add(ref lastBlockRef, index),
             ref Unsafe.Add(ref messageRef, i),
             (uint)(message.Length - i));
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ref uint AsUintReference(ref byte source)
-    {
-        return ref Unsafe.As<byte, uint>(ref source);
     }
 
     public unsafe void ProcessFinalBlock(Span<byte> digest)
