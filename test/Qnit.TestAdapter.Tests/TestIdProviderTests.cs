@@ -62,9 +62,9 @@ public static class TestIdProviderTests
 
         // Act
         var idProvider = CreateTestIdProvider();
-        foreach (var d in data.Skip(1))
+        for (var i = 1; i < data.Length; i++)
         {
-            idProvider.Append(d);
+            idProvider.Append(data[i]);
         }
 
         var id = idProvider.GetIdAndReset();
@@ -133,9 +133,6 @@ public static class TestIdProviderTests
     private static void IdGeneration_TestVector(string testName, string expected)
     {
         // Arrange
-#pragma warning disable CA1308 // Normalize strings to uppercase
-        expected = expected.Replace(" ", "", StringComparison.Ordinal).ToLowerInvariant();
-#pragma warning restore CA1308 // Normalize strings to uppercase
         var idProvider = CreateTestIdProvider();
 
         // Act
