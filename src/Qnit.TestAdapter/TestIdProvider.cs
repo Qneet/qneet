@@ -1,10 +1,12 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Qnit.TestAdapter;
 
 [SkipLocalsInit]
+[StructLayout(LayoutKind.Auto)]
 internal struct TestIdProvider
 {
     // should not be readonly
