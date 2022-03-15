@@ -63,7 +63,7 @@ internal struct Sha1Implementation
 
     public Sha1Implementation()
     {
-        m_lastBlock = new Buffer512();
+        Unsafe.SkipInit(out m_lastBlock);
         m_count0 = 0;
         m_count1 = 0;
 
