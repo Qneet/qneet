@@ -30,7 +30,7 @@ public sealed class VsTestExecutor : ITestExecutor
         m_cancellationSource = new CancellationTokenSource();
         using var countdownEvent = new CountdownEvent(1);
 
-        var groups = tests.GroupBy(s => s.Source);
+        var groups = tests.GroupBy(s => s.Source, StringComparer.Ordinal);
         foreach (var g in groups)
         {
             ExecuteTest(g.Key, g, frameworkHandle, countdownEvent, m_cancellationSource.Token);
@@ -119,8 +119,8 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
         };
         try
         {
-            var methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
             var type = m_assembly.GetType((string)m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty), false);
+            var methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
             var method = type.GetMethod((string)m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty), methodBindingFlags);
             m_frameworkHandle.RecordStart(m_testCase);
 
@@ -134,7 +134,8 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
                 }
                 else
                 {
-                    method.Invoke(Activator.CreateInstance(type), Array.Empty<object>());
+                    var instance = Activator.CreateInstance(type);
+                    method.Invoke(instance, Array.Empty<object>());
                 }
 
                 testResult.Outcome = TestOutcome.Passed;
@@ -142,8 +143,17 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
             catch (TargetInvocationException e)
             {
                 testResult.Outcome = TestOutcome.Failed;
-                testResult.ErrorMessage = e.InnerException.Message;
-                testResult.ErrorStackTrace = e.InnerException.StackTrace;
+                if (e.InnerException != null)
+                {
+                    testResult.ErrorMessage = e.InnerException.Message;
+                    testResult.ErrorStackTrace = e.InnerException.StackTrace;
+                }
+                else
+                {
+                    testResult.ErrorMessage = e.Message;
+                    testResult.ErrorStackTrace = e.StackTrace;
+                }
+
             }
             catch (Exception e)
             {
