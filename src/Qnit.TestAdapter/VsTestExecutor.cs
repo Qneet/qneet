@@ -129,68 +129,80 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
             var testResult = new TestResult(m_testCase)
             {
                 DisplayName = m_testCase.DisplayName,
+                // set by constructor
+                //StartTime = DateTimeOffset.Now
             };
 
-            var type = m_assembly.GetType(m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty), false);
-            var methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
-            var method = type.GetMethod(m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty), methodBindingFlags);
-            m_frameworkHandle.RecordStart(m_testCase);
-
-            testResult.StartTime = DateTimeOffset.Now;
-            var stopWatch = ValueStopwatch.StartNew();
             try
             {
-                if (method.IsStatic)
-                {
-                    method.Invoke(null, Array.Empty<object>());
-                }
-                else
-                {
-                    var instance = Activator.CreateInstance(type);
-                    method.Invoke(instance, Array.Empty<object>());
-                }
+                m_frameworkHandle.RecordStart(m_testCase);
 
-                testResult.Duration = stopWatch.GetElapsedTime();
-                testResult.Outcome = TestOutcome.Passed;
-            }
-            catch (TargetInvocationException e)
-            {
-                testResult.Duration = stopWatch.GetElapsedTime();
-                testResult.Outcome = TestOutcome.Failed;
-                if (e.InnerException != null)
+                var typeName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty);
+                var type = m_assembly.GetType(typeName, true);
+
+                var methodName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty);
+                const BindingFlags methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
+                var method = type.GetMethod(methodName, methodBindingFlags);
+
+                var stopWatch = ValueStopwatch.StartNew();
+                try
                 {
-                    testResult.ErrorMessage = e.InnerException.Message;
-                    testResult.ErrorStackTrace = e.InnerException.StackTrace;
+                    if (method.IsStatic)
+                    {
+                        method.Invoke(null, Array.Empty<object>());
+                    }
+                    else
+                    {
+                        var instance = Activator.CreateInstance(type);
+                        method.Invoke(instance, Array.Empty<object>());
+                    }
+
+                    testResult.Duration = stopWatch.GetElapsedTime();
+                    testResult.Outcome = TestOutcome.Passed;
                 }
-                else
+                catch (TargetInvocationException e)
                 {
+                    testResult.Duration = stopWatch.GetElapsedTime();
+                    testResult.Outcome = TestOutcome.Failed;
+                    if (e.InnerException != null)
+                    {
+                        testResult.ErrorMessage = e.InnerException.Message;
+                        testResult.ErrorStackTrace = e.InnerException.StackTrace;
+                    }
+                    else
+                    {
+                        testResult.ErrorMessage = e.Message;
+                        testResult.ErrorStackTrace = e.StackTrace;
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    testResult.Duration = stopWatch.GetElapsedTime();
+                    testResult.Outcome = TestOutcome.Failed;
                     testResult.ErrorMessage = e.Message;
                     testResult.ErrorStackTrace = e.StackTrace;
                 }
 
-            }
-            catch (Exception e)
-            {
-                testResult.Duration = stopWatch.GetElapsedTime();
-                testResult.Outcome = TestOutcome.Failed;
-                testResult.ErrorMessage = e.Message;
-                testResult.ErrorStackTrace = e.StackTrace;
-            }
 
-            m_frameworkHandle.RecordEnd(m_testCase, testResult.Outcome);
-            testResult.EndTime = DateTimeOffset.Now;
-
-            //testResult.SetPropertyValue<Guid>(ExecutorUri.ExecutionIdProperty, this.ExecutionId);
-            //testResult.SetPropertyValue<Guid>(ExecutorUri.ParentExecIdProperty, this.ParentExecId);
-            //testResult.SetPropertyValue<int>(ExecutorUri.InnerResultsCountProperty, this.InnerResultsCount);
-
-            try
-            {
-                m_frameworkHandle.RecordResult(testResult);
+                //testResult.SetPropertyValue<Guid>(ExecutorUri.ExecutionIdProperty, this.ExecutionId);
+                //testResult.SetPropertyValue<Guid>(ExecutorUri.ParentExecIdProperty, this.ParentExecId);
+                //testResult.SetPropertyValue<int>(ExecutorUri.InnerResultsCountProperty, this.InnerResultsCount);
             }
-            catch (TestCanceledException)
+            finally
             {
-                // Ignore this exception
+
+                m_frameworkHandle.RecordEnd(m_testCase, testResult.Outcome);
+
+                testResult.EndTime = DateTimeOffset.Now;
+                try
+                {
+                    m_frameworkHandle.RecordResult(testResult);
+                }
+                catch (TestCanceledException)
+                {
+                    // Ignore this exception
+                }
             }
         }
         finally
