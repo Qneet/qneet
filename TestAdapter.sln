@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit.TestAdapter", "src\Qni
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit.TestAdapter.Tests", "test\Qnit.TestAdapter.Tests\Qnit.TestAdapter.Tests.csproj", "{1D09A5E2-C539-48C3-BBC1-6326FC17F18C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit", "Qnit.Core\Qnit.csproj", "{78818183-B541-4FEB-9E90-2461A22AD623}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qnit", "src\Qnit.Core\Qnit.csproj", "{78818183-B541-4FEB-9E90-2461A22AD623}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
