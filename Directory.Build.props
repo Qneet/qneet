@@ -1,8 +1,8 @@
 <Project>
 	<PropertyGroup>
 		<Product>Qnit</Product>
-		<Authors>Qnit</Authors>
-		<Company>Qnit</Company>
+		<Authors>Denis Kulikov</Authors>
+		<Company>Denis Kulikov</Company>
 		<Copyright>Copyright © $(Company) $([System.DateTime]::Now.Year).All rights reserved.</Copyright>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<LangVersion>latest</LangVersion>
@@ -13,20 +13,30 @@
 		<!-- ATTN: SatelliteResourceLanguages does not work for test. See https://github.com/microsoft/vstest/issues/2057 -->
 		<SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
 		<EnableComHosting>false</EnableComHosting>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+	</PropertyGroup>
+	<PropertyGroup>
+		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<!--eature that allows code style rules (https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview#enable-on-build) specified in the EditorConfig file to be checked as part of the build;-->
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<!--Turns on all the rules that ship with the .NET SDK - set to the severity level of warning-->
+		<AnalysisMode>All</AnalysisMode>
+		<!--so that the latest set of rules (https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/overview#latest-updates) for your .NET SDK will be applied;-->
+		<AnalysisLevel>latest</AnalysisLevel>
+		<!-- All code style rules that are configured to be warnings or errors will execute on build and report violations. -->
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<!--RunAnalyzersDuringBuild and RunAnalyzersDuringLiveAnalysis controls when the analyser executes (https://docs.microsoft.com/en-us/visualstudio/code-quality/disable-code-analysis?view=vs-2019#net-framework-projects)-->
+		<RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+		<RunAnalyzersDuringLiveAnalysis>true</RunAnalyzersDuringLiveAnalysis>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<Using Include="System.Diagnostics.CodeAnalysis" />
 	</ItemGroup>
+
 	<ItemGroup>
-		<PackageReference Include="Meziantou.Analyzer" Version="1.0.688">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
-		<PackageReference Include="AsyncFixer" Version="1.5.1">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-		</PackageReference>
+		<Compile Include="$(MSBuildThisFileDirectory)common/SkipLocalsInit.cs" Visible="true" />
 	</ItemGroup>
 
 </Project>
