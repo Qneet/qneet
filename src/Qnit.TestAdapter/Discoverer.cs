@@ -11,7 +11,7 @@ namespace Qnit.TestAdapter;
 internal readonly struct Discoverer(IMessageLogger messageLogger)
 {
     // Suffix "Tests"
-    private static ReadOnlySpan<byte> TestSuffixBytes => new([54, 64, 73, 74, 73]);
+    private static ReadOnlySpan<byte> TestSuffixBytes => "Tests"u8;
     private const string TestsSuffix = "Tests";
 
     private const byte DotChar = 46; // symbol '.'
@@ -65,12 +65,13 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
                                 var methodName = metadataReader.GetString(method.Name);
 
                                 var methodFullyQualifiedName = string.Concat(classNameWithNamespace, ".", methodName);
-                                var testCase = new TestCase(methodFullyQualifiedName, ExecutorUri.Uri, source);
+                                var testCase = new TestCase(methodFullyQualifiedName, ExecutorUri.
+                                    Uri, source);
 
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedTypeProperty, classNameWithNamespace);
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedMethodProperty, methodName);
 
-                                idProvider.Append(ExecutorUri.Utf8Bytes.Span);
+                                idProvider.Append(ExecutorUri.Utf8Bytes);
                                 idProvider.Append(sourceUtf8Bytes);
                                 idProvider.Append(namespaceUtf8Bytes);
                                 idProvider.Append(DotChar);
@@ -94,12 +95,13 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
     private static bool IsTestClass(TypeDefinition type)
     {
         var attributes = type.Attributes;
-        var visibility = attributes & TypeAttributes.VisibilityMask;
+        if ((attributes & TypeAttributes.VisibilityMask) != TypeAttributes.Public)
+        {
+            return false;
+        }
         var classSemantics = attributes & TypeAttributes.ClassSemanticsMask;
-        if (!((visibility == TypeAttributes.Public)
-              && classSemantics != TypeAttributes.Interface
-              && (!attributes.HasFlag(TypeAttributes.Abstract) || (attributes.HasFlag(TypeAttributes.Abstract) &&
-                                                                   attributes.HasFlag(TypeAttributes.Sealed)))))
+        if (!(classSemantics != TypeAttributes.Interface
+              && (!attributes.HasFlag(TypeAttributes.Abstract) || (attributes.HasFlag(TypeAttributes.Abstract) && attributes.HasFlag(TypeAttributes.Sealed)))))
         {
             return false;
         }
@@ -120,7 +122,6 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         }
 
         return true;
-
     }
 
     private static bool EndWithTests(MetadataReader metadataReader, StringHandle stringHandle)
@@ -142,7 +143,7 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
 
     private static bool IsVirtual(StringHandle stringHandle) => MetadataTokens.GetHeapOffset(stringHandle) != -1;
 
-    // Tst method is public, static or instance, not generic, return void, does not have parameters
+    // Test method is public, static or instance, not generic, return void, does not have parameters
     private static bool IsTestMethod(MetadataReader metadataReader, MethodDefinition method)
     {
         var attributes = method.Attributes;
