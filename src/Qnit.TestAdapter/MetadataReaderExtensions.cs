@@ -11,6 +11,6 @@ internal static class MetadataReaderExtensions
 
     internal static ReadOnlySpan<byte> GetReadOnlySpanSpan(this MetadataReader metadataReader, StringHandle handle)
     {
-        return handle.IsNil ? ReadOnlySpan<byte>.Empty : metadataReader.GetBlobReader(handle).AsReadonlySpan();
+        return handle.IsNil ? [] : metadataReader.GetBlobReader(handle).AsReadonlySpan();
     }
 }

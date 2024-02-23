@@ -67,6 +67,7 @@ internal struct Sha1Implementation
         m_h4 = 0xC3D2E1F0u;
     }
 
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "Can not be simplified")]
     private void Transform(ref uint block)
     {
         var e = m_h4;
@@ -246,7 +247,7 @@ internal struct Sha1Implementation
         Span<byte> finalCount = stackalloc byte[8];
         for (var i = 0; i < 8; i++)
         {
-            finalCount[i] = (byte)((i < 4 ? m_count1 : m_count0) >> ((3 - (i & 3)) * 8) & 255);
+            finalCount[i] = (byte)(((i < 4 ? m_count1 : m_count0) >> ((3 - (i & 3)) * 8)) & 255);
         }
 
         Span<byte> temp = stackalloc byte[1];

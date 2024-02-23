@@ -6,11 +6,17 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Adapter;
 namespace Qnit.TestAdapter;
 
 [ExtensionUri(ExecutorUri.String)]
+[SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Only cancel can dispose m_cancellationSource field")]
 public sealed class VsTestExecutor : ITestExecutor
 {
     private readonly struct TestTestCaseCollector : ITestCaseCollector
     {
-        private readonly List<TestCase> m_testCases = new();
+        private readonly List<TestCase> m_testCases = [];
+
+        public TestTestCaseCollector()
+        {
+            m_testCases = [];
+        }
 
         public void AddTestCase(TestCase testCase)
         {
@@ -20,63 +26,70 @@ public sealed class VsTestExecutor : ITestExecutor
         public List<TestCase> TestCases => m_testCases;
     }
 
-    private CancellationTokenSource m_cancellationSource;
+    private CancellationTokenSource? m_cancellationSource;
 
-    public void RunTests(IEnumerable<TestCase>? tests, IRunContext runContext, IFrameworkHandle frameworkHandle)
+    public void RunTests(IEnumerable<TestCase>? tests, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         if (tests == null)
             return;
+        ArgumentNullException.ThrowIfNull(frameworkHandle);
 
         m_cancellationSource = new CancellationTokenSource();
+        var cancellationSource = m_cancellationSource;
         using var countdownEvent = new CountdownEvent(1);
 
         var groups = tests.GroupBy(s => s.Source, StringComparer.Ordinal);
         foreach (var g in groups)
         {
-            ExecuteTest(g.Key, g, frameworkHandle, countdownEvent, m_cancellationSource.Token);
+            ExecuteTest(g.Key, g, frameworkHandle, countdownEvent, cancellationSource.Token);
         }
 
         _ = countdownEvent.Signal();
 
-        countdownEvent.Wait(m_cancellationSource.Token);
-        m_cancellationSource.Cancel(throwOnFirstException: false);
+        countdownEvent.Wait(cancellationSource.Token);
+        cancellationSource.Cancel(throwOnFirstException: false);
+        cancellationSource.Dispose();
         m_cancellationSource = null;
     }
 
-    public void RunTests(IEnumerable<string>? sources, IRunContext runContext, IFrameworkHandle frameworkHandle)
+    public void RunTests(IEnumerable<string>? sources, IRunContext? runContext, IFrameworkHandle? frameworkHandle)
     {
         if (sources == null)
             return;
+        ArgumentNullException.ThrowIfNull(frameworkHandle);
 
         m_cancellationSource = new CancellationTokenSource();
+        var cancellationSource = m_cancellationSource;
         using var countdownEvent = new CountdownEvent(1);
 
         var testCaseCollector = new TestTestCaseCollector();
         var discover = new Discoverer(frameworkHandle);
         foreach (var source in sources)
         {
-            if (m_cancellationSource.IsCancellationRequested)
+            if (cancellationSource.IsCancellationRequested)
             {
                 break;
             }
-            discover.Discover(source, testCaseCollector, m_cancellationSource.Token);
+            discover.Discover(source, testCaseCollector, cancellationSource.Token);
 
-            ExecuteTest(source, testCaseCollector.TestCases, frameworkHandle, countdownEvent, m_cancellationSource.Token);
+            ExecuteTest(source, testCaseCollector.TestCases, frameworkHandle, countdownEvent, cancellationSource.Token);
 
             testCaseCollector.TestCases.Clear();
         }
 
         countdownEvent.Signal();
 
-        countdownEvent.Wait(m_cancellationSource.Token);
-        m_cancellationSource.Cancel(false);
+        countdownEvent.Wait(cancellationSource.Token);
+        cancellationSource.Cancel(throwOnFirstException: false);
         m_cancellationSource = null;
     }
 
     private static void ExecuteTest<TList>(string source, TList tests, IFrameworkHandle frameworkHandle, CountdownEvent countdownEvent, CancellationToken cancellationToken)
         where TList : IEnumerable<TestCase>
     {
+#pragma warning disable S3885
         var asm = Assembly.LoadFile(source);
+#pragma warning restore S3885
         foreach (var test in tests)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -87,7 +100,7 @@ public sealed class VsTestExecutor : ITestExecutor
             countdownEvent.AddCount();
             var executor = new TestCaseExecutor(asm, test, frameworkHandle, countdownEvent, cancellationToken);
             //executor.Execute();
-            ThreadPool.UnsafeQueueUserWorkItem(executor, false);
+            ThreadPool.UnsafeQueueUserWorkItem(executor, preferLocal: false);
         }
     }
 
@@ -97,25 +110,17 @@ public sealed class VsTestExecutor : ITestExecutor
     }
 }
 
-internal sealed class TestCaseExecutor : IThreadPoolWorkItem
+[SuppressMessage("Design", "MA0048:File name must match type name", Justification = "By design")]
+internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFrameworkHandle mFrameworkHandle,
+    CountdownEvent countdownEvent, CancellationToken cancellationToken) : IThreadPoolWorkItem
 {
-    private readonly Assembly m_assembly;
-    private readonly TestCase m_testCase;
-    private readonly IFrameworkHandle m_frameworkHandle;
-    private readonly CountdownEvent m_countdownEvent;
-    private readonly CancellationToken m_cancellationToken;
+    private readonly Assembly m_assembly = assembly;
+    private readonly TestCase m_testCase = testCase;
+    private readonly IFrameworkHandle m_frameworkHandle = mFrameworkHandle;
+    private readonly CountdownEvent m_countdownEvent = countdownEvent;
+    private readonly CancellationToken m_cancellationToken = cancellationToken;
 
-    public TestCaseExecutor(Assembly assembly, TestCase testCase, IFrameworkHandle mFrameworkHandle, 
-        CountdownEvent countdownEvent, CancellationToken cancellationToken)
-    {
-        m_assembly = assembly;
-        m_testCase = testCase;
-        m_frameworkHandle = mFrameworkHandle;
-        m_countdownEvent = countdownEvent;
-        m_cancellationToken = cancellationToken;
-    }
-
-    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "<Pending>")]
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "Can not simplified")]
     public void Execute()
     {
         try
@@ -138,23 +143,22 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
                 m_frameworkHandle.RecordStart(m_testCase);
 
                 var typeName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty);
-                var type = m_assembly.GetType(typeName, true);
+                var type = m_assembly.GetType(typeName, throwOnError: true)!;
 
                 var methodName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty);
-                const BindingFlags methodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
-                var method = type.GetMethod(methodName, methodBindingFlags);
-
+                const BindingFlags MethodBindingFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.Static;
+                var method = type.GetMethod(methodName, MethodBindingFlags) ?? throw new TestCaseNotFoundException(methodName);
                 var stopWatch = ValueStopwatch.StartNew();
                 try
                 {
                     if (method.IsStatic)
                     {
-                        method.Invoke(null, Array.Empty<object>());
+                        method.Invoke(null, []);
                     }
                     else
                     {
                         var instance = Activator.CreateInstance(type);
-                        method.Invoke(instance, Array.Empty<object>());
+                        method.Invoke(instance, []);
                     }
 
                     testResult.Duration = stopWatch.GetElapsedTime();
@@ -176,7 +180,10 @@ internal sealed class TestCaseExecutor : IThreadPoolWorkItem
                     }
 
                 }
+
+#pragma warning disable CA1031
                 catch (Exception e)
+#pragma warning restore CA1031
                 {
                     testResult.Duration = stopWatch.GetElapsedTime();
                     testResult.Outcome = TestOutcome.Failed;

@@ -8,21 +8,18 @@ using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
 
 namespace Qnit.TestAdapter;
 
-internal readonly struct Discoverer
+internal readonly struct Discoverer(IMessageLogger messageLogger)
 {
     // Suffix "Tests"
-    private static ReadOnlyMemory<byte> s_testSuffixBytes => new(new byte[] { 54, 64, 73, 74, 73});
+    private static ReadOnlySpan<byte> TestSuffixBytes => new([54, 64, 73, 74, 73]);
     private const string TestsSuffix = "Tests";
 
     private const byte DotChar = 46; // symbol '.'
 
-    private readonly IMessageLogger m_messageLogger;
+    private readonly IMessageLogger m_messageLogger = messageLogger;
 
-    public Discoverer(IMessageLogger messageLogger)
-    {
-        m_messageLogger = messageLogger;
-    }
-
+    [SuppressMessage("Design", "MA0051:Method is too long", Justification = "Can not be simplified")]
+    [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Will be used later")]
     public void Discover<TTestCaseCollector>(string source, TTestCaseCollector testCaseCollector, CancellationToken cancellationToken) where TTestCaseCollector : ITestCaseCollector
     {
         if (!TestSource.Supported(source))
@@ -132,19 +129,15 @@ internal readonly struct Discoverer
         {
             return metadataReader.GetString(stringHandle).EndsWith(TestsSuffix, StringComparison.Ordinal);
         }
-        else
+
+        var memoryBlock = metadataReader.GetBlobReader(stringHandle);
+        if (memoryBlock.Length >= TestSuffixBytes.Length)
         {
-            var memoryBlock = metadataReader.GetBlobReader(stringHandle);
-            if (memoryBlock.Length >= s_testSuffixBytes.Length)
-            {
-                var s = memoryBlock.AsReadonlySpan(memoryBlock.Length - s_testSuffixBytes.Length);
-                return s.SequenceEqual(s_testSuffixBytes.Span);
-            }
-            else
-            {
-                return false;
-            }
+            var tail = memoryBlock.AsReadonlySpan(memoryBlock.Length - TestSuffixBytes.Length);
+            return tail.SequenceEqual(TestSuffixBytes);
         }
+
+        return false;
     }
 
     private static bool IsVirtual(StringHandle stringHandle) => MetadataTokens.GetHeapOffset(stringHandle) != -1;

@@ -10,7 +10,7 @@ namespace Qnit.TestAdapter.Tests;
 public static class Sha1ImplTests
 {
     private static readonly char[] s_lookupTableLower =
-        { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+        ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'];
 
     public static void SHA1_TestVectors_EmptyString()
     {
@@ -119,7 +119,9 @@ public static class Sha1ImplTests
 
         if (string.IsNullOrEmpty(expected))
         {
+#pragma warning disable CA5350
             expected = ToHex(SHA1.HashData(bytes));
+#pragma warning restore CA5350
         }
 
         // Act

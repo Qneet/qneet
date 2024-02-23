@@ -2,22 +2,15 @@ using System.Reflection.Metadata;
 
 namespace Qnit.TestAdapter;
 
-internal ref struct NamespaceCache
+internal ref struct NamespaceCache(MetadataReader metadataReader)
 {
     private readonly record struct CacheItem(StringHandle StringHandle, string Name)
     {
     }
 
-    private readonly MetadataReader m_metadataReader;
-    private Span<CacheItem> m_items;
-    private int m_pos;
-
-    public NamespaceCache(MetadataReader mMetadataReader)
-    {
-        m_metadataReader = mMetadataReader;
-        m_items = new CacheItem[16];
-        m_pos = 0;
-    }
+    private readonly MetadataReader m_metadataReader = metadataReader;
+    private Span<CacheItem> m_items = new CacheItem[16];
+    private int m_pos = 0;
 
     public string GetName(StringHandle handle)
     {

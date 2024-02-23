@@ -11,14 +11,9 @@ namespace Qnit.TestAdapter;
 [Category("managed")]
 public sealed class VsTestDiscoverer : ITestDiscoverer
 {
-    private readonly struct TestTestCaseCollector : ITestCaseCollector
+    private readonly struct TestTestCaseCollector(ITestCaseDiscoverySink testCaseDiscoverySink) : ITestCaseCollector
     {
-        private readonly ITestCaseDiscoverySink m_testCaseDiscoverySink;
-
-        public TestTestCaseCollector(ITestCaseDiscoverySink testCaseDiscoverySink)
-        {
-            m_testCaseDiscoverySink = testCaseDiscoverySink;
-        }
+        private readonly ITestCaseDiscoverySink m_testCaseDiscoverySink = testCaseDiscoverySink;
 
         public void AddTestCase(TestCase testCase)
         {

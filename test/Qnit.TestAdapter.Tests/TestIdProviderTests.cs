@@ -3,56 +3,57 @@ using Xunit;
 
 namespace Qnit.TestAdapter.Tests;
 
+[SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can have underscore")]
 public static class TestIdProviderTests
 {
     public static void IdCompatibilityTests1()
     {
-        IdCompatibilityTests(new[] { "eea339da-6b5e-0d4b-3255-bfef95601890", "" });
+        IdCompatibilityTests(["eea339da-6b5e-0d4b-3255-bfef95601890", ""]);
     }
 
     public static void IdCompatibilityTests2()
     {
-        IdCompatibilityTests(new[] { "740b9afc-3350-4257-ca01-5bd47799147d", "adapter://", "name1" });
+        IdCompatibilityTests(["740b9afc-3350-4257-ca01-5bd47799147d", "adapter://", "name1"]);
     }
 
     public static void IdCompatibilityTests3()
     {
-        IdCompatibilityTests(new[] { "119c5b31-c0fb-1c12-6d1a-d617bb2bd996", "adapter://namesamplenam.testname" });
+        IdCompatibilityTests(["119c5b31-c0fb-1c12-6d1a-d617bb2bd996", "adapter://namesamplenam.testname"]);
     }
 
     public static void IdCompatibilityTests4()
     {
-        IdCompatibilityTests(new[] { "2a4c33ec-6115-4bd7-2e94-71f2fd3a5ee3", "adapter://namesamplenamespace.testname" });
+        IdCompatibilityTests(["2a4c33ec-6115-4bd7-2e94-71f2fd3a5ee3", "adapter://namesamplenamespace.testname"]);
     }
 
     public static void IdCompatibilityTests5()
     {
-        IdCompatibilityTests(new[] { "119c5b31-c0fb-1c12-6d1a-d617bb2bd996", "adapter://", "name", "samplenam", ".", "testname" });
+        IdCompatibilityTests(["119c5b31-c0fb-1c12-6d1a-d617bb2bd996", "adapter://", "name", "samplenam", ".", "testname"]);
     }
 
     public static void IdCompatibilityTests6()
     {
-        IdCompatibilityTests(new[] { "2a4c33ec-6115-4bd7-2e94-71f2fd3a5ee3", "adapter://", "name", "samplenamespace", ".", "testname" });
+        IdCompatibilityTests(["2a4c33ec-6115-4bd7-2e94-71f2fd3a5ee3", "adapter://", "name", "samplenamespace", ".", "testname"]);
     }
 
     public static void IdCompatibilityTests7()
     {
-        IdCompatibilityTests(new[] { "1fc07043-3d2d-1401-c732-3b507feec548", "adapter://namesamplenam.testnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });
+        IdCompatibilityTests(["1fc07043-3d2d-1401-c732-3b507feec548", "adapter://namesamplenam.testnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
     }
 
     public static void IdCompatibilityTests8()
     {
-        IdCompatibilityTests(new[] { "24e8a50b-2766-6a12-f461-9f8e4fa1cbb5", "adapter://namesamplenamespace.testnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });
+        IdCompatibilityTests(["24e8a50b-2766-6a12-f461-9f8e4fa1cbb5", "adapter://namesamplenamespace.testnameaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
     }
 
     public static void IdCompatibilityTests9()
     {
-        IdCompatibilityTests(new[] { "1fc07043-3d2d-1401-c732-3b507feec548", "adapter://", "name", "samplenam", ".", "testname", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });
+        IdCompatibilityTests(["1fc07043-3d2d-1401-c732-3b507feec548", "adapter://", "name", "samplenam", ".", "testname", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
     }
 
     public static void IdCompatibilityTests10()
     {
-        IdCompatibilityTests(new[] { "24e8a50b-2766-6a12-f461-9f8e4fa1cbb5", "adapter://", "name", "samplenamespace", ".", "testname", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" });
+        IdCompatibilityTests(["24e8a50b-2766-6a12-f461-9f8e4fa1cbb5", "adapter://", "name", "samplenamespace", ".", "testname", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]);
     }
 
     private static void IdCompatibilityTests(string[] data)

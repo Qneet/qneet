@@ -1,3 +1,3 @@
-﻿using System.Runtime.CompilerServices;
+using System.Runtime.CompilerServices;
 
-[assembly:InternalsVisibleTo("Qnit.TestAdapter.Tests")]
+[assembly: InternalsVisibleTo("Qnit.TestAdapter.Tests")]
