@@ -147,7 +147,7 @@ internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFr
 
                 var methodName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty);
                 const BindingFlags MethodBindingFlags = BindingFlags.Public | BindingFlags.Static;
-                var method = type.GetMethod(methodName, MethodBindingFlags) ?? throw new TestCaseNotFoundException(methodName);
+                var method = type.GetMethod(methodName, 0, MethodBindingFlags, binder: null, types: [], modifiers: null) ?? throw new TestCaseNotFoundException(methodName);
                 var stopWatch = ValueStopwatch.StartNew();
                 try
                 {
