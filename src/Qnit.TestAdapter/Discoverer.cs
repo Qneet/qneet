@@ -65,8 +65,7 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
                                 var methodName = metadataReader.GetString(method.Name);
 
                                 var methodFullyQualifiedName = string.Concat(classNameWithNamespace, ".", methodName);
-                                var testCase = new TestCase(methodFullyQualifiedName, ExecutorUri.
-                                    Uri, source);
+                                var testCase = new TestCase(methodFullyQualifiedName, ExecutorUri.Uri, source);
 
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedTypeProperty, classNameWithNamespace);
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedMethodProperty, methodName);
@@ -99,6 +98,12 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         {
             return false;
         }
+
+        if (attributes.HasFlag(TypeAttributes.SpecialName))
+        {
+            return false;
+        }
+
         var classSemantics = attributes & TypeAttributes.ClassSemanticsMask;
         if (!(classSemantics != TypeAttributes.Interface
               && (!attributes.HasFlag(TypeAttributes.Abstract) || (attributes.HasFlag(TypeAttributes.Abstract) && attributes.HasFlag(TypeAttributes.Sealed)))))
@@ -106,10 +111,6 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
             return false;
         }
 
-        if (attributes.HasFlag(TypeAttributes.SpecialName))
-        {
-            return false;
-        }
 
         if (type.GetGenericParameters().Count > 0)
         {
@@ -151,7 +152,8 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         if (visibility != MethodAttributes.Public
             || attributes.HasFlag(MethodAttributes.SpecialName)
             || attributes.HasFlag(MethodAttributes.Abstract)
-            || attributes.HasFlag(MethodAttributes.Virtual))
+            || attributes.HasFlag(MethodAttributes.Virtual)
+            || !attributes.HasFlag(MethodAttributes.Static))
         {
             return false;
         }

@@ -151,15 +151,7 @@ internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFr
                 var stopWatch = ValueStopwatch.StartNew();
                 try
                 {
-                    if (method.IsStatic)
-                    {
-                        method.Invoke(null, []);
-                    }
-                    else
-                    {
-                        var instance = Activator.CreateInstance(type);
-                        method.Invoke(instance, []);
-                    }
+                    method.Invoke(null, []);
 
                     testResult.Duration = stopWatch.GetElapsedTime();
                     testResult.Outcome = TestOutcome.Passed;
