@@ -114,6 +114,8 @@ public sealed class VsTestExecutor : ITestExecutor
 internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFrameworkHandle mFrameworkHandle,
     CountdownEvent countdownEvent, CancellationToken cancellationToken) : IThreadPoolWorkItem
 {
+    private const int MethodTokenNotFound = -1;
+
     private readonly Assembly m_assembly = assembly;
     private readonly TestCase m_testCase = testCase;
     private readonly IFrameworkHandle m_frameworkHandle = mFrameworkHandle;
@@ -121,7 +123,7 @@ internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFr
     private readonly CancellationToken m_cancellationToken = cancellationToken;
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "Can not simplified")]
-    public void Execute()
+    public unsafe void Execute()
     {
         try
         {
@@ -142,45 +144,45 @@ internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFr
             {
                 m_frameworkHandle.RecordStart(m_testCase);
 
-                var typeName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty);
-                var type = m_assembly.GetType(typeName, throwOnError: true)!;
-
-                var methodName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty);
-                const BindingFlags MethodBindingFlags = BindingFlags.Public | BindingFlags.Static;
-                var method = type.GetMethod(methodName, 0, MethodBindingFlags, binder: null, types: [], modifiers: null) ?? throw new TestCaseNotFoundException(methodName);
-                var stopWatch = ValueStopwatch.StartNew();
-                try
+                var module = m_assembly.ManifestModule;// GetModules()[0];
+                var methodToken = m_testCase.GetPropertyValue(ManagedNameConstants.MethodTokenProperty, MethodTokenNotFound);
+                if (methodToken == MethodTokenNotFound)
                 {
-                    method.Invoke(null, []);
-
-                    testResult.Duration = stopWatch.GetElapsedTime();
-                    testResult.Outcome = TestOutcome.Passed;
-                }
-                catch (TargetInvocationException e)
-                {
-                    testResult.Duration = stopWatch.GetElapsedTime();
                     testResult.Outcome = TestOutcome.Failed;
-                    if (e.InnerException != null)
+                    testResult.ErrorMessage = $"Test case \"{m_testCase.FullyQualifiedName}\" does not have method token property";
+                }
+                else
+                {
+                    var methodHandle = module.ModuleHandle.ResolveMethodHandle(methodToken);
+
+                    /*
+                    var typeName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty);
+                    var type = m_assembly.GetType(typeName, throwOnError: true)!;
+                    var methodName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedMethodProperty, string.Empty);
+                    const BindingFlags MethodBindingFlags = BindingFlags.Public | BindingFlags.Static;
+                    var method = type.GetMethod(methodName, 0, MethodBindingFlags, binder: null, types: [], modifiers: null) ?? throw new TestCaseNotFoundException(methodName);
+                    var methodHandle = method.MethodHandle;
+                    */
+
+                    // support only static methods, without input paramters and return void
+                    var testMethod = (delegate* managed<void>)methodHandle.GetFunctionPointer();
+                    var stopWatch = ValueStopwatch.StartNew();
+                    try
                     {
-                        testResult.ErrorMessage = e.InnerException.Message;
-                        testResult.ErrorStackTrace = e.InnerException.StackTrace;
+                        testMethod();
+
+                        testResult.Duration = stopWatch.GetElapsedTime();
+                        testResult.Outcome = TestOutcome.Passed;
                     }
-                    else
+#pragma warning disable CA1031
+                    catch (Exception e)
+#pragma warning restore CA1031
                     {
+                        testResult.Duration = stopWatch.GetElapsedTime();
+                        testResult.Outcome = TestOutcome.Failed;
                         testResult.ErrorMessage = e.Message;
                         testResult.ErrorStackTrace = e.StackTrace;
                     }
-
-                }
-
-#pragma warning disable CA1031
-                catch (Exception e)
-#pragma warning restore CA1031
-                {
-                    testResult.Duration = stopWatch.GetElapsedTime();
-                    testResult.Outcome = TestOutcome.Failed;
-                    testResult.ErrorMessage = e.Message;
-                    testResult.ErrorStackTrace = e.StackTrace;
                 }
 
 
@@ -188,12 +190,20 @@ internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFr
                 //testResult.SetPropertyValue<Guid>(ExecutorUri.ParentExecIdProperty, this.ParentExecId);
                 //testResult.SetPropertyValue<int>(ExecutorUri.InnerResultsCountProperty, this.InnerResultsCount);
             }
+#pragma warning disable CA1031
+            catch (Exception e)
+#pragma warning restore CA1031
+            {
+                testResult.Outcome = TestOutcome.Failed;
+                testResult.ErrorMessage = e.Message;
+                testResult.ErrorStackTrace = e.StackTrace;
+            }
             finally
             {
 
                 m_frameworkHandle.RecordEnd(m_testCase, testResult.Outcome);
 
-                testResult.EndTime = DateTimeOffset.Now;
+                testResult.EndTime = DateTimeOffset.UtcNow;
                 try
                 {
                     m_frameworkHandle.RecordResult(testResult);

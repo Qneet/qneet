@@ -1,13 +1,20 @@
-﻿using Microsoft.VisualStudio.TestPlatform.ObjectModel;
+using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 
 namespace Qnit.TestAdapter;
 
 internal static class ManagedNameConstants
 {
+    private const string TestCaseLabelPrefix = "TestCase.";
+
     /// <summary>
     /// Label to use on ManagedType test property.
     /// </summary>
     internal const string ManagedTypeLabel = "ManagedType";
+
+    /// <summary>
+    /// Property id to use on ManagedType test property.
+    /// </summary>
+    internal const string ManagedTypePropertyId = TestCaseLabelPrefix + ManagedTypeLabel;
 
     /// <summary>
     /// Label to use on ManagedMethod test property.
@@ -15,24 +22,30 @@ internal static class ManagedNameConstants
     internal const string ManagedMethodLabel = "ManagedMethod";
 
     /// <summary>
-    /// Property id to use on ManagedType test property.
-    /// </summary>
-    internal const string ManagedTypePropertyId = "TestCase." + ManagedTypeLabel;
-
-    /// <summary>
     /// Property id to use on ManagedMethod test property.
     /// </summary>
-    internal const string ManagedMethodPropertyId = "TestCase." + ManagedMethodLabel;
+    internal const string ManagedMethodPropertyId = TestCaseLabelPrefix + ManagedMethodLabel;
 
     /// <summary>
     /// Label to use on Hierarchy test property.
     /// </summary>
-    public const string HierarchyLabel = "Hierarchy";
+    internal const string HierarchyLabel = "Hierarchy";
 
     /// <summary>
     /// Property id to use on Hierarchy test property.
     /// </summary>
-    public const string HierarchyPropertyId = "TestCase." + HierarchyLabel;
+    internal const string HierarchyPropertyId = TestCaseLabelPrefix + HierarchyLabel;
+
+    /// <summary>
+    /// Label to use on MethodToken test property.
+    /// </summary>
+    internal const string MethodTokenLabel = "MethodToken";
+
+    /// <summary>
+    /// Property id to use on MethodToken test property.
+    /// </summary>
+    internal const string MethodTokenPropertyId = TestCaseLabelPrefix + MethodTokenLabel;
+
 
     /// <summary>
     /// Meanings of the indices in the Hierarchy array.
@@ -83,5 +96,15 @@ internal static class ManagedNameConstants
         valueType: typeof(string[]),
         validateValueCallback: null,
         attributes: TestPropertyAttributes.Immutable,
+        owner: typeof(TestCase));
+
+    internal static readonly TestProperty MethodTokenProperty = TestProperty.Register(
+        id: MethodTokenPropertyId,
+        label: MethodTokenLabel,
+        category: string.Empty,
+        description: string.Empty,
+        valueType: typeof(int),
+        validateValueCallback: null,
+        attributes: TestPropertyAttributes.Hidden,
         owner: typeof(TestCase));
 }

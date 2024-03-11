@@ -65,8 +65,10 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
                                 var methodName = metadataReader.GetString(method.Name);
 
                                 var methodFullyQualifiedName = string.Concat(classNameWithNamespace, ".", methodName);
+                                var token = MetadataTokens.GetToken(metadataReader, methodHandle);
                                 var testCase = new TestCase(methodFullyQualifiedName, ExecutorUri.Uri, source);
 
+                                testCase.SetPropertyValue(ManagedNameConstants.MethodTokenProperty, token);
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedTypeProperty, classNameWithNamespace);
                                 testCase.SetPropertyValue(ManagedNameConstants.ManagedMethodProperty, methodName);
 
@@ -149,11 +151,13 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
     {
         var attributes = method.Attributes;
         var visibility = attributes & MethodAttributes.MemberAccessMask;
-        if (visibility != MethodAttributes.Public
+        if (visibility != MethodAttributes.Public)
+            return false;
+
+        if (!attributes.HasFlag(MethodAttributes.Static)
             || attributes.HasFlag(MethodAttributes.SpecialName)
             || attributes.HasFlag(MethodAttributes.Abstract)
-            || attributes.HasFlag(MethodAttributes.Virtual)
-            || !attributes.HasFlag(MethodAttributes.Static))
+            || attributes.HasFlag(MethodAttributes.Virtual))
         {
             return false;
         }
