@@ -2,14 +2,26 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
-
 namespace Qnit.TestAdapter;
 
 internal readonly struct Discoverer(IMessageLogger messageLogger)
 {
+    [StructLayout(LayoutKind.Auto)]
+    private unsafe readonly struct NativeMemoryHandle(byte* pointer, int size) : IDisposable
+    {
+        internal readonly byte* Pointer = pointer;
+        internal readonly int Size = size;
+
+        public void Dispose()
+        {
+            NativeMemory.Free(Pointer);
+        }
+    }
+
     // Suffix "Tests"
     private static ReadOnlySpan<byte> TestSuffixBytes => "Tests"u8;
     private const string TestsSuffix = "Tests";
@@ -20,7 +32,7 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
 
     [SuppressMessage("Design", "MA0051:Method is too long", Justification = "Can not be simplified")]
     [SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Will be used later")]
-    public void Discover<TTestCaseCollector>(string source, TTestCaseCollector testCaseCollector, CancellationToken cancellationToken) where TTestCaseCollector : ITestCaseCollector
+    public unsafe void Discover<TTestCaseCollector>(string source, TTestCaseCollector testCaseCollector, CancellationToken cancellationToken) where TTestCaseCollector : ITestCaseCollector
     {
         if (!TestSource.Supported(source))
         {
@@ -28,8 +40,8 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
             return;
         }
 
-        using var assemblyFile = File.OpenRead(source);
-        using var peReader = new PEReader(assemblyFile);
+        using var assemblyFile = ReadFile(source);
+        using var peReader = new PEReader(assemblyFile.Pointer, assemblyFile.Size);
         if (peReader.HasMetadata && peReader.IsEntireImageAvailable && peReader.PEHeaders.CorHeader != null)
         {
             var metadataReader = peReader.GetMetadataReader();
@@ -185,5 +197,15 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         }
 
         return true;
+    }
+
+    private unsafe static NativeMemoryHandle ReadFile(string path)
+    {
+        using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        var size = RandomAccess.GetLength(handle);
+        var bufferPointer = NativeMemory.Alloc((nuint)size);
+        var buffer = new Span<byte>(bufferPointer, (int)size);
+        var readSize = RandomAccess.Read(handle, buffer, 0);
+        return new((byte*)bufferPointer, readSize);
     }
 }
