@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Linq;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -9,11 +10,11 @@ namespace Qnit.TestAdapter;
 [SuppressMessage("Design", "CA1001:Types that own disposable fields should be disposable", Justification = "Only cancel can dispose m_cancellationSource field")]
 public sealed class VsTestExecutor : ITestExecutor
 {
-    private readonly struct TestTestCaseCollector : ITestCaseCollector
+    private readonly struct ListTestCaseCollector : ITestCaseCollector, IEnumerable<TestCase>
     {
         private readonly List<TestCase> m_testCases = [];
 
-        public TestTestCaseCollector()
+        public ListTestCaseCollector()
         {
             m_testCases = [];
         }
@@ -23,7 +24,13 @@ public sealed class VsTestExecutor : ITestExecutor
             m_testCases.Add(testCase);
         }
 
-        public List<TestCase> TestCases => m_testCases;
+        public void Clear() => m_testCases.Clear();
+
+        public List<TestCase>.Enumerator GetEnumerator() => m_testCases.GetEnumerator();
+
+        IEnumerator<TestCase> IEnumerable<TestCase>.GetEnumerator() => GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)m_testCases).GetEnumerator();
     }
 
     private CancellationTokenSource? m_cancellationSource;
@@ -62,7 +69,7 @@ public sealed class VsTestExecutor : ITestExecutor
         var cancellationSource = m_cancellationSource;
         using var countdownEvent = new CountdownEvent(1);
 
-        var testCaseCollector = new TestTestCaseCollector();
+        var testCaseCollector = new ListTestCaseCollector();
         var discover = new Discoverer(frameworkHandle);
         foreach (var source in sources)
         {
@@ -72,9 +79,9 @@ public sealed class VsTestExecutor : ITestExecutor
             }
             discover.Discover(source, testCaseCollector, cancellationSource.Token);
 
-            ExecuteTest(source, testCaseCollector.TestCases, frameworkHandle, countdownEvent, cancellationSource.Token);
+            ExecuteTest(source, testCaseCollector, frameworkHandle, countdownEvent, cancellationSource.Token);
 
-            testCaseCollector.TestCases.Clear();
+            testCaseCollector.Clear();
         }
 
         countdownEvent.Signal();
@@ -90,6 +97,7 @@ public sealed class VsTestExecutor : ITestExecutor
 #pragma warning disable S3885
         var asm = Assembly.LoadFile(source);
 #pragma warning restore S3885
+        var module = asm.ManifestModule;
         foreach (var test in tests)
         {
             if (cancellationToken.IsCancellationRequested)
@@ -98,7 +106,7 @@ public sealed class VsTestExecutor : ITestExecutor
             }
 
             countdownEvent.AddCount();
-            var executor = new TestCaseExecutor(asm, test, frameworkHandle, countdownEvent, cancellationToken);
+            var executor = new TestCaseExecutor(module, test, frameworkHandle, countdownEvent, cancellationToken);
             //executor.Execute();
             ThreadPool.UnsafeQueueUserWorkItem(executor, preferLocal: false);
         }
@@ -111,14 +119,14 @@ public sealed class VsTestExecutor : ITestExecutor
 }
 
 [SuppressMessage("Design", "MA0048:File name must match type name", Justification = "By design")]
-internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFrameworkHandle mFrameworkHandle,
+internal sealed class TestCaseExecutor(Module module, TestCase testCase, IFrameworkHandle frameworkHandle,
     CountdownEvent countdownEvent, CancellationToken cancellationToken) : IThreadPoolWorkItem
 {
     private const int MethodTokenNotFound = -1;
 
-    private readonly Assembly m_assembly = assembly;
+    private readonly Module m_module = module;
     private readonly TestCase m_testCase = testCase;
-    private readonly IFrameworkHandle m_frameworkHandle = mFrameworkHandle;
+    private readonly IFrameworkHandle m_frameworkHandle = frameworkHandle;
     private readonly CountdownEvent m_countdownEvent = countdownEvent;
     private readonly CancellationToken m_cancellationToken = cancellationToken;
 
@@ -144,16 +152,15 @@ internal sealed class TestCaseExecutor(Assembly assembly, TestCase testCase, IFr
             {
                 m_frameworkHandle.RecordStart(m_testCase);
 
-                var module = m_assembly.ManifestModule;// GetModules()[0];
                 var methodToken = m_testCase.GetPropertyValue(ManagedNameConstants.MethodTokenProperty, MethodTokenNotFound);
                 if (methodToken == MethodTokenNotFound)
                 {
                     testResult.Outcome = TestOutcome.Failed;
-                    testResult.ErrorMessage = $"Test case \"{m_testCase.FullyQualifiedName}\" does not have method token property";
+                    testResult.ErrorMessage = $"Test case \"{m_testCase.DisplayName}\" does not have method token property";
                 }
                 else
                 {
-                    var methodHandle = module.ModuleHandle.ResolveMethodHandle(methodToken);
+                    var methodHandle = m_module.ModuleHandle.ResolveMethodHandle(methodToken);
 
                     /*
                     var typeName = m_testCase.GetPropertyValue(ManagedNameConstants.ManagedTypeProperty, string.Empty);
