@@ -2,7 +2,8 @@ using Xunit;
 
 namespace Qnit.TestAdapter.Tests;
 
-public static class ValueStopwatchTests
+[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>")]
+public struct ValueStopwatchTests
 {
     public static void GetElapsedTimeThrowExceptionWhenDefaultConstructorUsed()
     {
@@ -14,7 +15,7 @@ public static class ValueStopwatchTests
     public static void GetElapsedTimeReturnElapsedWhenStartNewUsed()
     {
         var sp = ValueStopwatch.StartNew();
-
+        new SpinWait().SpinOnce();
         var elapsed = sp.GetElapsedTime();
 
         Assert.True(sp.IsActive);

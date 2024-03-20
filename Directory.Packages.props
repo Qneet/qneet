@@ -5,13 +5,13 @@
     <!--<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>-->
   </PropertyGroup>
   <ItemGroup>
-    <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.143" />
+    <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.145" />
     <GlobalPackageReference Include="AsyncFixer" Version="1.6.0" />
-    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="9.20.0.85982" />
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="9.21.0.86780" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.8.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.8.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.9.2" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.9.2" />
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="17.9.0" />
     <PackageVersion Include="System.Reflection.Metadata" Version="8.0.0" />
     <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.9.0" />
