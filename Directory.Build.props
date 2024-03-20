@@ -15,6 +15,10 @@
 		<EnableComHosting>false</EnableComHosting>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
 	<PropertyGroup>
 		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>

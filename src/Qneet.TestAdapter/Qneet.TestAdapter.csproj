@@ -4,6 +4,10 @@
     <TargetFramework>net8.0</TargetFramework>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <IsPackable>true</IsPackable>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
     <PackageReference Include="System.Reflection.Metadata" />
