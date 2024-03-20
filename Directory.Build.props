@@ -1,6 +1,6 @@
 <Project>
 	<PropertyGroup>
-		<Product>Qnit</Product>
+		<Product>Qneet</Product>
 		<Authors>Denis Kulikov</Authors>
 		<Company>Denis Kulikov</Company>
 		<Copyright>Copyright © $(Company) $([System.DateTime]::Now.Year).All rights reserved.</Copyright>
