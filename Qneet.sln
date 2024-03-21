@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qneet.Generators", "src\Qne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qneet.Generators.Tests", "test\Qneet.Generators.Tests\Qneet.Generators.Tests.csproj", "{5028C429-A05B-4D48-A8B6-4F395B5DC004}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Qneet.Attributes", "src\Qneet.Attributes\Qneet.Attributes.csproj", "{4E82922B-7C8C-4E0A-92CD-F5E75889CADD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Qneet.Attributes", "src\Qneet.Attributes\Qneet.Attributes.csproj", "{4E82922B-7C8C-4E0A-92CD-F5E75889CADD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

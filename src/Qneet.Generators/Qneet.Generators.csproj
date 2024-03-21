@@ -1,8 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <CLSCompliant>false</CLSCompliant>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <CLSCompliant>false</CLSCompliant>    
   </PropertyGroup>
 
   <PropertyGroup>
