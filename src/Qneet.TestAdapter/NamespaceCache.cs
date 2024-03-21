@@ -1,4 +1,6 @@
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Qneet.TestAdapter;
 
@@ -9,7 +11,7 @@ internal ref struct NamespaceCache(MetadataReader metadataReader)
     }
 
     private readonly MetadataReader m_metadataReader = metadataReader;
-    private Span<CacheItem> m_items = new CacheItem[16];
+    private CacheItem[] m_items = new CacheItem[16];
     private int m_pos = 0;
 
     public string GetName(StringHandle handle)
@@ -23,13 +25,15 @@ internal ref struct NamespaceCache(MetadataReader metadataReader)
 
     private readonly bool TryFind(StringHandle handle, out CacheItem ns)
     {
-        foreach (var item in m_items.Slice(0, m_pos))
+        ref var item = ref MemoryMarshal.GetArrayDataReference(m_items);
+        for (var i = 0; i < m_pos; i++)
         {
             if (item.StringHandle == handle)
             {
                 ns = item;
                 return true;
             }
+            item = Unsafe.Add(ref item, 1);
         }
 
         ns = default;
@@ -51,7 +55,8 @@ internal ref struct NamespaceCache(MetadataReader metadataReader)
 
     private void Grow()
     {
-        var capacity = m_items.Length;
+        var oldItems = m_items;
+        var capacity = oldItems.Length;
         var nextCapacity = 2 * capacity;
 
         if ((uint)nextCapacity > (uint)Array.MaxLength)
@@ -61,7 +66,7 @@ internal ref struct NamespaceCache(MetadataReader metadataReader)
 
         var next = new CacheItem[nextCapacity];
 
-        m_items.CopyTo(next);
+        oldItems.AsSpan().CopyTo(next);
         m_items = next;
     }
 }
