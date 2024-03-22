@@ -11,7 +11,7 @@ namespace Qneet.TestAdapter;
 [Category("managed")]
 public sealed class VsTestDiscoverer : ITestDiscoverer
 {
-    private readonly struct TestTestCaseCollector(ITestCaseDiscoverySink testCaseDiscoverySink) : ITestCaseCollector
+    private readonly struct TestCaseCollector(ITestCaseDiscoverySink testCaseDiscoverySink) : ITestCaseCollector
     {
         private readonly ITestCaseDiscoverySink m_testCaseDiscoverySink = testCaseDiscoverySink;
 
@@ -35,7 +35,7 @@ public sealed class VsTestDiscoverer : ITestDiscoverer
 
         var d = new Discoverer(logger);
 
-        var testCaseCollector = new TestTestCaseCollector(discoverySink);
+        var testCaseCollector = new TestCaseCollector(discoverySink);
         foreach (var source in sources)
         {
             d.Discover(source, testCaseCollector, CancellationToken.None);
