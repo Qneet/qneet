@@ -1,4 +1,5 @@
 using System.Reflection.Metadata;
+using System.Runtime.CompilerServices;
 
 namespace Qneet.TestAdapter;
 
@@ -14,8 +15,8 @@ internal static class BlobReaderExtensions
         return new ReadOnlySpan<byte>(blobReader.StartPointer, blobReader.Length);
     }
 
-    internal static unsafe ReadOnlySpan<byte> AsReadonlySpan(this BlobReader blobReader, int start)
+    internal static unsafe ref byte AsTailRef(this BlobReader blobReader, int endOffset)
     {
-        return new ReadOnlySpan<byte>(blobReader.StartPointer, blobReader.Length).Slice(start);
+        return ref Unsafe.AsRef<byte>(blobReader.StartPointer + blobReader.Length - endOffset);
     }
 }

@@ -2,6 +2,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
@@ -22,9 +23,9 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         }
     }
 
-    // Suffix "Tests"
     private static ReadOnlySpan<byte> TestSuffixBytes => "Tests"u8;
     private const string TestsSuffix = "Tests";
+    private const int TestSuffixLength = 5;
 
     private const byte DotChar = 46; // symbol '.'
 
@@ -147,10 +148,12 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         }
 
         var memoryBlock = metadataReader.GetBlobReader(stringHandle);
-        if (memoryBlock.Length >= TestSuffixBytes.Length)
+        if (memoryBlock.Length >= TestSuffixLength)
         {
-            var tail = memoryBlock.AsReadonlySpan(memoryBlock.Length - TestSuffixBytes.Length);
-            return tail.SequenceEqual(TestSuffixBytes);
+            ref var tailRef = ref memoryBlock.AsTailRef(TestSuffixLength);
+            ref var testSuffixRef = ref MemoryMarshal.GetReference(TestSuffixBytes);
+            return Unsafe.ReadUnaligned<int>(ref tailRef) == Unsafe.ReadUnaligned<int>(ref testSuffixRef)
+                && Unsafe.Add(ref tailRef, 4) == Unsafe.Add(ref testSuffixRef, 4);
         }
 
         return false;
