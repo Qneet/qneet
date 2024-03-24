@@ -214,9 +214,11 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
     {
         using var stream = new ReadOnlyUnmanagedMemoryStream(memoryHandle.Pointer, memoryHandle.Size);
         var peHeaders = new PEHeaders(stream, memoryHandle.Size);
-        if (peHeaders.MetadataSize > 0 && peHeaders.CorHeader != null)
+        var metadataStartOffset = peHeaders.MetadataStartOffset;
+        var metadataSize = peHeaders.MetadataSize;
+        if (metadataStartOffset >= 0 && metadataSize > 0 && (metadataStartOffset + metadataSize) <= memoryHandle.Size)
         {
-            metadataReader = new MetadataReader(memoryHandle.Pointer + peHeaders.MetadataStartOffset, peHeaders.MetadataSize);
+            metadataReader = new MetadataReader(memoryHandle.Pointer + metadataStartOffset, metadataSize);
             return true;
         }
 
