@@ -42,10 +42,8 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         }
 
         using var assemblyFile = ReadFile(source);
-        using var peReader = new PEReader(assemblyFile.Pointer, assemblyFile.Size);
-        if (peReader.HasMetadata && peReader.IsEntireImageAvailable && peReader.PEHeaders.CorHeader != null)
+        if (TryGetMetadataReader(assemblyFile, out var metadataReader))
         {
-            var metadataReader = peReader.GetMetadataReader();
             if (metadataReader.IsAssembly)
             {
                 var sourceUtf8Bytes = new ReadOnlySpan<byte>(Encoding.UTF8.GetBytes(source));
@@ -210,5 +208,19 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         var buffer = new Span<byte>(bufferPointer, (int)size);
         var readSize = RandomAccess.Read(handle, buffer, 0);
         return new((byte*)bufferPointer, readSize);
+    }
+
+    private unsafe static bool TryGetMetadataReader(NativeMemoryHandle memoryHandle, [MaybeNullWhen(false)] out MetadataReader metadataReader)
+    {
+        using var stream = new ReadOnlyUnmanagedMemoryStream(memoryHandle.Pointer, memoryHandle.Size);
+        var peHeaders = new PEHeaders(stream, memoryHandle.Size);
+        if (peHeaders.MetadataSize > 0 && peHeaders.CorHeader != null)
+        {
+            metadataReader = new MetadataReader(memoryHandle.Pointer + peHeaders.MetadataStartOffset, peHeaders.MetadataSize);
+            return true;
+        }
+
+        metadataReader = default;
+        return false;
     }
 }
