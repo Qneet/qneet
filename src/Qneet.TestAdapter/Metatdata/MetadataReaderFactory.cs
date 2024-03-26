@@ -19,30 +19,30 @@ internal static class MetadataReaderFactory
 
         SkipDosHeader(ref reader, out var isCoffOnly);
 
-        var coffHeader = new CoffHeader(ref reader);
+        var numberOfSections = new CoffHeader(ref reader).NumberOfSections;
 
-        PEHeader peHeader = default;
+        DirectoryEntry corHeaderTableDirectory = default;
         if (!isCoffOnly)
         {
-            peHeader = new PEHeader(ref reader);
+            corHeaderTableDirectory = new PEHeader(ref reader).CorHeaderTableDirectory;
         }
 
-        var sectionHeaders = ReadSectionHeaders(coffHeader.NumberOfSections, ref reader);
+        var sectionHeaders = ReadSectionHeaders(numberOfSections, ref reader);
 
-        CorHeader corHeader = default;
-        var hasCorHeader = false;
+        DirectoryEntry metadataDirectory = default;
+        var hasMetadataDirectory = false;
         if (!isCoffOnly)
         {
-            if (TryCalculateCorHeaderOffset(peHeader.CorHeaderTableDirectory, sectionHeaders, isLoadedImage, out var offset))
+            if (TryCalculateCorHeaderOffset(corHeaderTableDirectory, sectionHeaders, isLoadedImage, out var offset))
             {
                 reader.Seek(offset);
 
-                corHeader = new CorHeader(ref reader);
-                hasCorHeader = true;
+                metadataDirectory = new CorHeader(ref reader).MetadataDirectory;
+                hasMetadataDirectory = true;
             }
         }
-        ref readonly var metadataDirectory = ref (hasCorHeader ? ref corHeader.MetadataDirectory : ref Unsafe.NullRef<DirectoryEntry>());
-        CalculateMetadataLocation(sectionHeaders, isCoffOnly, isLoadedImage, in metadataDirectory, size, out var metadataStartOffset, out var metadataSize);
+        ref readonly var metadataDirectoryRef = ref (hasMetadataDirectory ? ref metadataDirectory : ref Unsafe.NullRef<DirectoryEntry>());
+        CalculateMetadataLocation(sectionHeaders, isCoffOnly, isLoadedImage, in metadataDirectoryRef, size, out var metadataStartOffset, out var metadataSize);
 
         if (metadataSize > 0 && metadataStartOffset > 0)
         {
@@ -54,7 +54,6 @@ internal static class MetadataReaderFactory
         return false;
     }
 
-    [SuppressMessage("Design", "MA0012:Do not raise reserved exception type", Justification = "<Pending>")]
     private static void SkipDosHeader(ref PEBinaryReader reader, out bool isCOFFOnly)
     {
         // Look for DOS Signature "MZ"
