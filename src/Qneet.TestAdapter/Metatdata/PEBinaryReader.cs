@@ -34,6 +34,12 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
         m_currentOffset += count;
     }
 
+    public void Skip<T>() where T : unmanaged
+    {
+        CheckBounds(m_currentOffset, sizeof(T));
+        m_currentOffset += sizeof(T);
+    }
+
     public ReadOnlySpan<byte> ReadBytes(int count)
     {
         var currentOffset = m_currentOffset;

@@ -2,7 +2,6 @@ using System.Runtime.InteropServices;
 
 namespace Qneet.TestAdapter.Metatdata;
 
-[SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>")]
 [StructLayout(LayoutKind.Auto)]
 internal readonly struct SectionHeader
 {
@@ -28,7 +27,7 @@ internal readonly struct SectionHeader
 
     /// <summary>
     /// The size of the section (for object files) or the size of the initialized data on disk (for image files).
-    /// For PE images, this must be a multiple of <see cref="PEHeader.FileAlignment"/>.
+    /// For PE images, this must be a multiple of FileAlignment />.
     /// If this is less than <see cref="VirtualSize"/>, the remainder of the section is zero-filled.
     /// Because the <see cref="SizeOfRawData"/> field is rounded but the <see cref="VirtualSize"/> field is not,
     /// it is possible for <see cref="SizeOfRawData"/> to be greater than <see cref="VirtualSize"/> as well.
@@ -38,7 +37,7 @@ internal readonly struct SectionHeader
 
     /// <summary>
     /// The file pointer to the first page of the section within the COFF file.
-    /// For PE images, this must be a multiple of <see cref="PEHeader.FileAlignment"/>.
+    /// For PE images, this must be a multiple of FileAlignment />.
     /// For object files, the value should be aligned on a 4 byte boundary for best performance.
     /// When a section contains only uninitialized data, this field should be zero.
     /// </summary>

@@ -34,7 +34,7 @@ internal static class MetadataReaderFactory
         var hasCorHeader = false;
         if (!isCoffOnly)
         {
-            if (TryCalculateCorHeaderOffset(in peHeader, sectionHeaders, isLoadedImage, out var offset))
+            if (TryCalculateCorHeaderOffset(peHeader.CorHeaderTableDirectory, sectionHeaders, isLoadedImage, out var offset))
             {
                 reader.Seek(offset);
 
@@ -117,16 +117,15 @@ internal static class MetadataReaderFactory
         return builder.MoveToImmutable();
     }
 
-    private static bool TryCalculateCorHeaderOffset(ref readonly PEHeader peHeader, ImmutableArray<SectionHeader> sectionHeaders, bool isLoadedImage, out int startOffset)
+    private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, ImmutableArray<SectionHeader> sectionHeaders, bool isLoadedImage, out int startOffset)
     {
-        if (!TryGetDirectoryOffset(sectionHeaders, peHeader.CorHeaderTableDirectory, isLoadedImage, out startOffset, canCrossSectionBoundary: false))
+        if (!TryGetDirectoryOffset(sectionHeaders, corHeaderTableDirectory, isLoadedImage, out startOffset, canCrossSectionBoundary: false))
         {
             startOffset = -1;
             return false;
         }
 
-        var length = peHeader.CorHeaderTableDirectory.Size;
-        if (length < SizeOfCorHeader)
+        if (corHeaderTableDirectory.Size < SizeOfCorHeader)
         {
             throw new BadImageFormatException("Invalid COR header size.");
         }
