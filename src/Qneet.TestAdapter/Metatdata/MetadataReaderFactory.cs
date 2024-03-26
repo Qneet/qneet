@@ -117,7 +117,7 @@ internal static class MetadataReaderFactory
 
     private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, SectionHeader[] sectionHeaders, bool isLoadedImage, out int startOffset)
     {
-        if (!TryGetDirectoryOffset(sectionHeaders, corHeaderTableDirectory, isLoadedImage, out startOffset, canCrossSectionBoundary: false))
+        if (!TryGetDirectoryOffset(sectionHeaders, corHeaderTableDirectory, isLoadedImage, out startOffset))
         {
             startOffset = -1;
             return false;
@@ -132,7 +132,7 @@ internal static class MetadataReaderFactory
     }
 
     private static bool TryGetDirectoryOffset(SectionHeader[] sectionHeaders, DirectoryEntry directory, bool isLoadedImage,
-        out int offset, bool canCrossSectionBoundary)
+        out int offset)
     {
         var sectionIndex = GetContainingSectionIndex(sectionHeaders, directory.RelativeVirtualAddress);
         if (sectionIndex < 0)
@@ -142,7 +142,7 @@ internal static class MetadataReaderFactory
         }
 
         var relativeOffset = directory.RelativeVirtualAddress - sectionHeaders[sectionIndex].VirtualAddress;
-        if (!canCrossSectionBoundary && directory.Size > sectionHeaders[sectionIndex].VirtualSize - relativeOffset)
+        if (directory.Size > sectionHeaders[sectionIndex].VirtualSize - relativeOffset)
         {
             throw new BadImageFormatException("Section too small.");
         }
@@ -212,7 +212,7 @@ internal static class MetadataReaderFactory
                 return;
             }
 
-            if (!TryGetDirectoryOffset(sectionHeaders, metadataDirectory, isLoadedImage, out start, canCrossSectionBoundary: false))
+            if (!TryGetDirectoryOffset(sectionHeaders, metadataDirectory, isLoadedImage, out start))
             {
                 throw new BadImageFormatException("Missing data directory.");
             }
