@@ -1,12 +1,12 @@
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using System.Reflection.PortableExecutable;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
+using Qneet.TestAdapter.Metatdata;
 namespace Qneet.TestAdapter;
 
 internal readonly struct Discoverer(IMessageLogger messageLogger)
@@ -212,17 +212,7 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
 
     private unsafe static bool TryGetMetadataReader(NativeMemoryHandle memoryHandle, [MaybeNullWhen(false)] out MetadataReader metadataReader)
     {
-        using var stream = new ReadOnlyUnmanagedMemoryStream(memoryHandle.Pointer, memoryHandle.Size);
-        var peHeaders = new PEHeaders(stream, memoryHandle.Size);
-        var metadataStartOffset = peHeaders.MetadataStartOffset;
-        var metadataSize = peHeaders.MetadataSize;
-        if (metadataStartOffset >= 0 && metadataSize > 0 && (metadataStartOffset + metadataSize) <= memoryHandle.Size)
-        {
-            metadataReader = new MetadataReader(memoryHandle.Pointer + metadataStartOffset, metadataSize);
-            return true;
-        }
 
-        metadataReader = default;
-        return false;
+        return MetadataReaderFactory.TryGetMetadaReader(memoryHandle.Pointer, memoryHandle.Size, isLoadedImage: false, out metadataReader);
     }
 }
