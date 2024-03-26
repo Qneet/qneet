@@ -256,8 +256,10 @@ internal readonly struct PEHeader
         sizeof(int) +                                // SizeOfUninitializedData
         sizeof(int) +                                // AddressOfEntryPoint
         sizeof(int) +                                // BaseOfCode
+#pragma warning disable IDE0055
         sizeof(long) +                               // PE32:  BaseOfData (int), ImageBase (int)
                                                      // PE32+: ImageBase (long)
+#pragma warning restore IDE0055
         sizeof(int) +                                // SectionAlignment
         sizeof(int) +                                // FileAlignment
         sizeof(short) +                              // MajorOperatingSystemVersion
