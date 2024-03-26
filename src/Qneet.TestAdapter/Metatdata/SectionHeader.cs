@@ -43,34 +43,6 @@ internal readonly struct SectionHeader
     /// </summary>
     public int PointerToRawData { get; }
 
-    /// <summary>
-    /// The file pointer to the beginning of relocation entries for the section.
-    /// This is set to zero for PE images or if there are no relocations.
-    /// </summary>
-    public int PointerToRelocations { get; }
-
-    /// <summary>
-    /// The file pointer to the beginning of line-number entries for the section.
-    /// This is set to zero if there are no COFF line numbers.
-    /// This value should be zero for an image because COFF debugging information is deprecated.
-    /// </summary>
-    public int PointerToLineNumbers { get; }
-
-    /// <summary>
-    /// The number of relocation entries for the section. This is set to zero for PE images.
-    /// </summary>
-    public ushort NumberOfRelocations { get; }
-
-    /// <summary>
-    /// The number of line-number entries for the section.
-    ///  This value should be zero for an image because COFF debugging information is deprecated.
-    /// </summary>
-    public ushort NumberOfLineNumbers { get; }
-
-    /// <summary>
-    /// The flags that describe the characteristics of the section.
-    /// </summary>
-    public uint SectionCharacteristics { get; }
 
     internal const int NameSize = 8;
 
@@ -93,10 +65,6 @@ internal readonly struct SectionHeader
         VirtualAddress = reader.ReadInt32();
         SizeOfRawData = reader.ReadInt32();
         PointerToRawData = reader.ReadInt32();
-        PointerToRelocations = reader.ReadInt32();
-        PointerToLineNumbers = reader.ReadInt32();
-        NumberOfRelocations = reader.ReadUInt16();
-        NumberOfLineNumbers = reader.ReadUInt16();
-        SectionCharacteristics = reader.ReadUInt32();
+        reader.Skip(4 + 4 + 2 + 2 + 4);
     }
 }

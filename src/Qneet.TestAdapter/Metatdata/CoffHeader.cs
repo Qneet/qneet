@@ -8,7 +8,7 @@ internal readonly struct CoffHeader
     /// <summary>
     /// The number of sections. This indicates the size of the section table, which immediately follows the headers.
     /// </summary>
-    public short NumberOfSections { get; }
+    public readonly short NumberOfSections;
 
     internal const int Size =
         sizeof(short) + // Machine

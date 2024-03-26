@@ -1,4 +1,3 @@
-using System.Reflection.PortableExecutable;
 using System.Runtime.InteropServices;
 
 namespace Qneet.TestAdapter.Metatdata;
@@ -6,33 +5,12 @@ namespace Qneet.TestAdapter.Metatdata;
 [StructLayout(LayoutKind.Auto)]
 internal readonly struct CorHeader
 {
-    public ushort MajorRuntimeVersion { get; }
-    public ushort MinorRuntimeVersion { get; }
-    public DirectoryEntry MetadataDirectory { get; }
-    public CorFlags Flags { get; }
-    public int EntryPointTokenOrRelativeVirtualAddress { get; }
-    public DirectoryEntry ResourcesDirectory { get; }
-    public DirectoryEntry StrongNameSignatureDirectory { get; }
-    public DirectoryEntry CodeManagerTableDirectory { get; }
-    public DirectoryEntry VtableFixupsDirectory { get; }
-    public DirectoryEntry ExportAddressTableJumpsDirectory { get; }
-    public DirectoryEntry ManagedNativeHeaderDirectory { get; }
+    public readonly DirectoryEntry MetadataDirectory;
 
     internal CorHeader(ref PEBinaryReader reader)
     {
-        // byte count
-        reader.ReadInt32();
-
-        MajorRuntimeVersion = reader.ReadUInt16();
-        MinorRuntimeVersion = reader.ReadUInt16();
+        reader.Skip(4 + 2 + 2);
         MetadataDirectory = new DirectoryEntry(ref reader);
-        Flags = (CorFlags)reader.ReadUInt32();
-        EntryPointTokenOrRelativeVirtualAddress = reader.ReadInt32();
-        ResourcesDirectory = new DirectoryEntry(ref reader);
-        StrongNameSignatureDirectory = new DirectoryEntry(ref reader);
-        CodeManagerTableDirectory = new DirectoryEntry(ref reader);
-        VtableFixupsDirectory = new DirectoryEntry(ref reader);
-        ExportAddressTableJumpsDirectory = new DirectoryEntry(ref reader);
-        ManagedNativeHeaderDirectory = new DirectoryEntry(ref reader);
+        reader.Skip(4 + 4 + (8 * 6));
     }
 }

@@ -9,7 +9,7 @@ internal readonly struct PEHeader
     /// <remarks>
     /// Aka IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR.
     /// </remarks>
-    public DirectoryEntry CorHeaderTableDirectory { get; }
+    public readonly DirectoryEntry CorHeaderTableDirectory;
 
     internal const int OffsetOfChecksum =
         sizeof(short) +                              // Magic

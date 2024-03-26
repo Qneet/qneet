@@ -1,4 +1,3 @@
-using System.Collections.Immutable;
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 
@@ -42,8 +41,8 @@ internal static class MetadataReaderFactory
                 hasCorHeader = true;
             }
         }
-        ref readonly var corHeaderRef = ref (hasCorHeader ? ref corHeader : ref Unsafe.NullRef<CorHeader>());
-        CalculateMetadataLocation(sectionHeaders, isCoffOnly, isLoadedImage, in corHeaderRef, size, out var metadataStartOffset, out var metadataSize);
+        ref readonly var metadataDirectory = ref (hasCorHeader ? ref corHeader.MetadataDirectory : ref Unsafe.NullRef<DirectoryEntry>());
+        CalculateMetadataLocation(sectionHeaders, isCoffOnly, isLoadedImage, in metadataDirectory, size, out var metadataStartOffset, out var metadataSize);
 
         if (metadataSize > 0 && metadataStartOffset > 0)
         {
@@ -100,24 +99,24 @@ internal static class MetadataReaderFactory
         }
     }
 
-    private static ImmutableArray<SectionHeader> ReadSectionHeaders(int numberOfSections, ref PEBinaryReader reader)
+    private static SectionHeader[] ReadSectionHeaders(int numberOfSections, ref PEBinaryReader reader)
     {
         if (numberOfSections < 0)
         {
             throw new BadImageFormatException("Invalid number of sections declared in PE header.");
         }
 
-        var builder = ImmutableArray.CreateBuilder<SectionHeader>(numberOfSections);
+        var sections = new SectionHeader[numberOfSections];
 
-        for (var i = 0; i < numberOfSections; i++)
+        for (var i = 0; i < sections.Length; i++)
         {
-            builder.Add(new SectionHeader(ref reader));
+            sections[i] = new SectionHeader(ref reader);
         }
 
-        return builder.MoveToImmutable();
+        return sections;
     }
 
-    private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, ImmutableArray<SectionHeader> sectionHeaders, bool isLoadedImage, out int startOffset)
+    private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, SectionHeader[] sectionHeaders, bool isLoadedImage, out int startOffset)
     {
         if (!TryGetDirectoryOffset(sectionHeaders, corHeaderTableDirectory, isLoadedImage, out startOffset, canCrossSectionBoundary: false))
         {
@@ -133,7 +132,7 @@ internal static class MetadataReaderFactory
         return true;
     }
 
-    private static bool TryGetDirectoryOffset(ImmutableArray<SectionHeader> sectionHeaders, DirectoryEntry directory, bool isLoadedImage,
+    private static bool TryGetDirectoryOffset(SectionHeader[] sectionHeaders, DirectoryEntry directory, bool isLoadedImage,
         out int offset, bool canCrossSectionBoundary)
     {
         var sectionIndex = GetContainingSectionIndex(sectionHeaders, directory.RelativeVirtualAddress);
@@ -153,7 +152,7 @@ internal static class MetadataReaderFactory
         return true;
     }
 
-    private static int GetContainingSectionIndex(ImmutableArray<SectionHeader> sectionHeaders, int relativeVirtualAddress)
+    private static int GetContainingSectionIndex(SectionHeader[] sectionHeaders, int relativeVirtualAddress)
     {
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
@@ -167,7 +166,7 @@ internal static class MetadataReaderFactory
         return -1;
     }
 
-    internal static int IndexOfSection(ImmutableArray<SectionHeader> sectionHeaders, string name)
+    internal static int IndexOfSection(SectionHeader[] sectionHeaders, string name)
     {
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
@@ -180,8 +179,8 @@ internal static class MetadataReaderFactory
         return -1;
     }
 
-    private static void CalculateMetadataLocation(ImmutableArray<SectionHeader> sectionHeaders,
-        bool isCoffOnly, bool isLoadedImage, ref readonly CorHeader corHeader,
+    private static void CalculateMetadataLocation(SectionHeader[] sectionHeaders,
+        bool isCoffOnly, bool isLoadedImage, ref readonly DirectoryEntry metadataDirectory,
         long peImageSize, out int start, out int size)
     {
         if (isCoffOnly)
@@ -207,19 +206,19 @@ internal static class MetadataReaderFactory
         }
         else
         {
-            if (Unsafe.IsNullRef(in corHeader))
+            if (Unsafe.IsNullRef(in metadataDirectory))
             {
                 start = 0;
                 size = 0;
                 return;
             }
 
-            if (!TryGetDirectoryOffset(sectionHeaders, corHeader.MetadataDirectory, isLoadedImage, out start, canCrossSectionBoundary: false))
+            if (!TryGetDirectoryOffset(sectionHeaders, metadataDirectory, isLoadedImage, out start, canCrossSectionBoundary: false))
             {
                 throw new BadImageFormatException("Missing data directory.");
             }
 
-            size = corHeader.MetadataDirectory.Size;
+            size = metadataDirectory.Size;
         }
 
         if (start < 0 ||
