@@ -30,7 +30,12 @@ internal static class MetadataReaderFactory
             corHeaderTableDirectory = new PEHeader(ref reader).CorHeaderTableDirectory;
         }
 
-        var sectionHeaders = ReadSectionHeaders(numberOfSections, ref reader);
+        if (numberOfSections < 0)
+        {
+            throw new BadImageFormatException("Invalid number of sections declared in PE header.");
+        }
+        Span<SectionHeader> sectionHeaders = stackalloc SectionHeader[numberOfSections];
+        ReadSectionHeaders(sectionHeaders, ref reader);
 
         DirectoryEntry metadataDirectory = default;
         var hasMetadataDirectory = false;
@@ -101,24 +106,16 @@ internal static class MetadataReaderFactory
         }
     }
 
-    private static SectionHeader[] ReadSectionHeaders(int numberOfSections, ref PEBinaryReader reader)
+    private static void ReadSectionHeaders(Span<SectionHeader> sections, ref PEBinaryReader reader)
     {
-        if (numberOfSections < 0)
-        {
-            throw new BadImageFormatException("Invalid number of sections declared in PE header.");
-        }
-
-        var sections = new SectionHeader[numberOfSections];
 
         for (var i = 0; i < sections.Length; i++)
         {
             sections[i] = new SectionHeader(ref reader);
         }
-
-        return sections;
     }
 
-    private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, SectionHeader[] sectionHeaders, bool isLoadedImage, out int startOffset)
+    private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, Span<SectionHeader> sectionHeaders, bool isLoadedImage, out int startOffset)
     {
         if (!TryGetDirectoryOffset(sectionHeaders, corHeaderTableDirectory, isLoadedImage, out startOffset))
         {
@@ -134,7 +131,7 @@ internal static class MetadataReaderFactory
         return true;
     }
 
-    private static bool TryGetDirectoryOffset(SectionHeader[] sectionHeaders, DirectoryEntry directory, bool isLoadedImage,
+    private static bool TryGetDirectoryOffset(Span<SectionHeader> sectionHeaders, DirectoryEntry directory, bool isLoadedImage,
         out int offset)
     {
         var sectionIndex = GetContainingSectionIndex(sectionHeaders, directory.RelativeVirtualAddress);
@@ -154,7 +151,7 @@ internal static class MetadataReaderFactory
         return true;
     }
 
-    private static int GetContainingSectionIndex(SectionHeader[] sectionHeaders, int relativeVirtualAddress)
+    private static int GetContainingSectionIndex(Span<SectionHeader> sectionHeaders, int relativeVirtualAddress)
     {
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
@@ -168,11 +165,11 @@ internal static class MetadataReaderFactory
         return -1;
     }
 
-    internal static unsafe int FindCormetaSectionIndex(SectionHeader[] sectionHeaders)
+    internal static unsafe int FindCormetaSectionIndex(Span<SectionHeader> sectionHeaders)
     {
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
-            var sectionHeader = sectionHeaders[i];
+            ref var sectionHeader = ref sectionHeaders[i];
             if (sectionHeader.NameUtf8.Size != 8)
             {
                 continue;
@@ -187,7 +184,7 @@ internal static class MetadataReaderFactory
         return -1;
     }
 
-    private static void CalculateMetadataLocation(SectionHeader[] sectionHeaders,
+    private static void CalculateMetadataLocation(Span<SectionHeader> sectionHeaders,
         bool isCoffOnly, bool isLoadedImage, ref readonly DirectoryEntry metadataDirectory,
         long peImageSize, out int start, out int size)
     {

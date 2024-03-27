@@ -19,8 +19,6 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
     private readonly byte* m_pointer = pointer;
     private int m_currentOffset = 0;
 
-    public readonly int CurrentOffset => m_currentOffset;
-
     public void Seek(int offset)
     {
         CheckBounds(0, offset);
@@ -37,21 +35,6 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
     {
         CheckBounds(m_currentOffset, sizeof(T));
         m_currentOffset += sizeof(T);
-    }
-
-    public ReadOnlySpan<byte> ReadBytes(int count)
-    {
-        var currentOffset = m_currentOffset;
-        CheckBounds(currentOffset, count);
-        var value = new ReadOnlySpan<byte>(m_pointer + currentOffset, count);
-        m_currentOffset += count;
-        return value;
-    }
-
-    public byte ReadByte()
-    {
-        CheckBounds(sizeof(byte));
-        return m_pointer[m_currentOffset++];
     }
 
     public short ReadInt16() => (short)ReadUInt16();
@@ -90,22 +73,6 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
             Unsafe.ReadUnaligned<uint>(source);
     }
 
-    public ulong ReadUInt64()
-    {
-        CheckBounds(sizeof(ulong));
-        var value = ReadUInt64LittleEndian(m_pointer + m_currentOffset);
-        m_currentOffset += sizeof(ulong);
-        return value;
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static ulong ReadUInt64LittleEndian(byte* source)
-    {
-        return !BitConverter.IsLittleEndian ?
-            BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<ulong>(source)) :
-            Unsafe.ReadUnaligned<ulong>(source);
-    }
-
     /// <summary>
     /// Reads a fixed-length byte block as a null-padded UTF-8 encoded string.
     /// The padding is not included in the returned string.
@@ -129,14 +96,6 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
             }
         }
         return new MemoryBlock(bytes, nonPaddedLength);
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static nuint ReadNUInt32LittleEndian(byte* source)
-    {
-        return !BitConverter.IsLittleEndian ?
-            BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<nuint>(source)) :
-            Unsafe.ReadUnaligned<nuint>(source);
     }
 
     private readonly void CheckBounds(uint count)
