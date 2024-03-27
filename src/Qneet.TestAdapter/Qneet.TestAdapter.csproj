@@ -10,7 +10,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.TestPlatform.ObjectModel" />
-    <PackageReference Include="System.Reflection.Metadata" />
   </ItemGroup>
 
 </Project>
