@@ -1,7 +1,6 @@
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Qneet.TestAdapter.Metatdata;
 
@@ -115,7 +114,7 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
     /// between non-NUL codepoints, it is not considered to be padding and
     /// is included in the result.
     /// </summary>
-    public string ReadNullPaddedUTF8(int byteCount)
+    public MemoryBlock ReadNullPaddedUTF8(int byteCount)
     {
         CheckBounds(m_currentOffset, byteCount);
         var bytes = m_pointer + m_currentOffset;
@@ -129,7 +128,7 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
                 break;
             }
         }
-        return Encoding.UTF8.GetString(bytes, nonPaddedLength);
+        return new MemoryBlock(bytes, nonPaddedLength);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -8,7 +8,7 @@ internal readonly struct SectionHeader
     /// <summary>
     /// The name of the section.
     /// </summary>
-    public readonly string Name;
+    public readonly MemoryBlock NameUtf8;
 
     /// <summary>
     /// The total size of the section when loaded into memory.
@@ -60,7 +60,7 @@ internal readonly struct SectionHeader
 
     internal SectionHeader(ref PEBinaryReader reader)
     {
-        Name = reader.ReadNullPaddedUTF8(NameSize);
+        NameUtf8 = reader.ReadNullPaddedUTF8(NameSize);
         VirtualSize = reader.ReadInt32();
         VirtualAddress = reader.ReadInt32();
         SizeOfRawData = reader.ReadInt32();

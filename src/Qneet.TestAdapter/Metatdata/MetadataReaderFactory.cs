@@ -1,11 +1,14 @@
 using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 namespace Qneet.TestAdapter.Metatdata;
 
 [SuppressMessage("Design", "MA0012:Do not raise reserved exception type", Justification = "<Pending>")]
 internal static class MetadataReaderFactory
 {
+    private static ReadOnlySpan<byte> CormetaSection => ".cormeta"u8;
+
     internal const ushort DosSignature = 0x5A4D;     // 'M' 'Z'
     internal const int PESignatureOffsetLocation = 0x3C;
     internal const uint PESignature = 0x00004550;    // PE00
@@ -165,11 +168,17 @@ internal static class MetadataReaderFactory
         return -1;
     }
 
-    internal static int IndexOfSection(SectionHeader[] sectionHeaders, string name)
+    internal static unsafe int FindCormetaSectionIndex(SectionHeader[] sectionHeaders)
     {
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
-            if (sectionHeaders[i].Name.Equals(name, StringComparison.Ordinal))
+            var sectionHeader = sectionHeaders[i];
+            if (sectionHeader.NameUtf8.Size != 8)
+            {
+                continue;
+            }
+
+            if (Unsafe.Read<long>(sectionHeader.NameUtf8.Pointer) == MemoryMarshal.Read<long>(CormetaSection))
             {
                 return i;
             }
@@ -184,23 +193,24 @@ internal static class MetadataReaderFactory
     {
         if (isCoffOnly)
         {
-            var cormeta = IndexOfSection(sectionHeaders, ".cormeta");
-            if (cormeta == -1)
+            var cormetaIndex = FindCormetaSectionIndex(sectionHeaders);
+            if (cormetaIndex == -1)
             {
                 start = -1;
                 size = 0;
                 return;
             }
 
+            ref var sectionHeader = ref sectionHeaders[cormetaIndex];
             if (isLoadedImage)
             {
-                start = sectionHeaders[cormeta].VirtualAddress;
-                size = sectionHeaders[cormeta].VirtualSize;
+                start = sectionHeader.VirtualAddress;
+                size = sectionHeader.VirtualSize;
             }
             else
             {
-                start = sectionHeaders[cormeta].PointerToRawData;
-                size = sectionHeaders[cormeta].SizeOfRawData;
+                start = sectionHeader.PointerToRawData;
+                size = sectionHeader.SizeOfRawData;
             }
         }
         else
