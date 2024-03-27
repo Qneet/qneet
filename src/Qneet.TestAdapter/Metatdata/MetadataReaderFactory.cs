@@ -7,7 +7,7 @@ namespace Qneet.TestAdapter.Metatdata;
 [SuppressMessage("Design", "MA0012:Do not raise reserved exception type", Justification = "<Pending>")]
 internal static class MetadataReaderFactory
 {
-    private static ReadOnlySpan<byte> CormetaSection => ".cormeta"u8;
+    private static ReadOnlySpan<byte> CormetaSectionName => ".cormeta"u8;
 
     internal const ushort DosSignature = 0x5A4D;     // 'M' 'Z'
     internal const int PESignatureOffsetLocation = 0x3C;
@@ -35,7 +35,10 @@ internal static class MetadataReaderFactory
             throw new BadImageFormatException("Invalid number of sections declared in PE header.");
         }
         Span<SectionHeader> sectionHeaders = stackalloc SectionHeader[numberOfSections];
-        ReadSectionHeaders(sectionHeaders, ref reader);
+        for (var i = 0; i < sectionHeaders.Length; i++)
+        {
+            sectionHeaders[i] = new SectionHeader(ref reader);
+        }
 
         DirectoryEntry metadataDirectory = default;
         var hasMetadataDirectory = false;
@@ -49,6 +52,7 @@ internal static class MetadataReaderFactory
                 hasMetadataDirectory = true;
             }
         }
+
         ref readonly var metadataDirectoryRef = ref (hasMetadataDirectory ? ref metadataDirectory : ref Unsafe.NullRef<DirectoryEntry>());
         CalculateMetadataLocation(sectionHeaders, isCoffOnly, isLoadedImage, in metadataDirectoryRef, size, out var metadataStartOffset, out var metadataSize);
 
@@ -106,15 +110,6 @@ internal static class MetadataReaderFactory
         }
     }
 
-    private static void ReadSectionHeaders(Span<SectionHeader> sections, ref PEBinaryReader reader)
-    {
-
-        for (var i = 0; i < sections.Length; i++)
-        {
-            sections[i] = new SectionHeader(ref reader);
-        }
-    }
-
     private static bool TryCalculateCorHeaderOffset(DirectoryEntry corHeaderTableDirectory, Span<SectionHeader> sectionHeaders, bool isLoadedImage, out int startOffset)
     {
         if (!TryGetDirectoryOffset(sectionHeaders, corHeaderTableDirectory, isLoadedImage, out startOffset))
@@ -134,39 +129,41 @@ internal static class MetadataReaderFactory
     private static bool TryGetDirectoryOffset(Span<SectionHeader> sectionHeaders, DirectoryEntry directory, bool isLoadedImage,
         out int offset)
     {
-        var sectionIndex = GetContainingSectionIndex(sectionHeaders, directory.RelativeVirtualAddress);
-        if (sectionIndex < 0)
+        ref var sectionHeader = ref GetContainingSectionIndex(sectionHeaders, directory.RelativeVirtualAddress);
+        if (Unsafe.IsNullRef(in sectionHeader))
         {
             offset = -1;
             return false;
         }
 
-        var relativeOffset = directory.RelativeVirtualAddress - sectionHeaders[sectionIndex].VirtualAddress;
-        if (directory.Size > sectionHeaders[sectionIndex].VirtualSize - relativeOffset)
+        var relativeOffset = directory.RelativeVirtualAddress - sectionHeader.VirtualAddress;
+        if (directory.Size > sectionHeader.VirtualSize - relativeOffset)
         {
             throw new BadImageFormatException("Section too small.");
         }
 
-        offset = isLoadedImage ? directory.RelativeVirtualAddress : sectionHeaders[sectionIndex].PointerToRawData + relativeOffset;
+        offset = isLoadedImage ? directory.RelativeVirtualAddress : sectionHeader.PointerToRawData + relativeOffset;
         return true;
     }
 
-    private static int GetContainingSectionIndex(Span<SectionHeader> sectionHeaders, int relativeVirtualAddress)
+    private static ref SectionHeader GetContainingSectionIndex(Span<SectionHeader> sectionHeaders, int relativeVirtualAddress)
     {
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
-            if (sectionHeaders[i].VirtualAddress <= relativeVirtualAddress &&
-                relativeVirtualAddress < sectionHeaders[i].VirtualAddress + sectionHeaders[i].VirtualSize)
+            ref var sectionHeader = ref sectionHeaders[i];
+            if (sectionHeader.VirtualAddress <= relativeVirtualAddress &&
+                relativeVirtualAddress < sectionHeader.VirtualAddress + sectionHeader.VirtualSize)
             {
-                return i;
+                return ref sectionHeader;
             }
         }
 
-        return -1;
+        return ref Unsafe.NullRef<SectionHeader>();
     }
 
-    internal static unsafe int FindCormetaSectionIndex(Span<SectionHeader> sectionHeaders)
+    internal static unsafe ref SectionHeader FindCormetaSectionIndex(Span<SectionHeader> sectionHeaders)
     {
+        var cormetaSectionName = MemoryMarshal.Read<long>(CormetaSectionName);
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
             ref var sectionHeader = ref sectionHeaders[i];
@@ -175,13 +172,13 @@ internal static class MetadataReaderFactory
                 continue;
             }
 
-            if (Unsafe.Read<long>(sectionHeader.NameUtf8.Pointer) == MemoryMarshal.Read<long>(CormetaSection))
+            if (Unsafe.Read<long>(sectionHeader.NameUtf8.Pointer) == cormetaSectionName)
             {
-                return i;
+                return ref sectionHeader;
             }
         }
 
-        return -1;
+        return ref Unsafe.NullRef<SectionHeader>();
     }
 
     private static void CalculateMetadataLocation(Span<SectionHeader> sectionHeaders,
@@ -190,24 +187,23 @@ internal static class MetadataReaderFactory
     {
         if (isCoffOnly)
         {
-            var cormetaIndex = FindCormetaSectionIndex(sectionHeaders);
-            if (cormetaIndex == -1)
+            ref var cormetaSection = ref FindCormetaSectionIndex(sectionHeaders);
+            if (Unsafe.IsNullRef(in cormetaSection))
             {
                 start = -1;
                 size = 0;
                 return;
             }
 
-            ref var sectionHeader = ref sectionHeaders[cormetaIndex];
             if (isLoadedImage)
             {
-                start = sectionHeader.VirtualAddress;
-                size = sectionHeader.VirtualSize;
+                start = cormetaSection.VirtualAddress;
+                size = cormetaSection.VirtualSize;
             }
             else
             {
-                start = sectionHeader.PointerToRawData;
-                size = sectionHeader.SizeOfRawData;
+                start = cormetaSection.PointerToRawData;
+                size = cormetaSection.SizeOfRawData;
             }
         }
         else
