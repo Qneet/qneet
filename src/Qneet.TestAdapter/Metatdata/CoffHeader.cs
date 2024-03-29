@@ -10,7 +10,7 @@ internal readonly struct CoffHeader
     /// </summary>
     public readonly short NumberOfSections;
 
-    internal const int Size =
+    internal const uint Size =
         sizeof(short) + // Machine
         sizeof(short) + // NumberOfSections
         sizeof(int) +   // TimeDateStamp:
@@ -21,9 +21,8 @@ internal readonly struct CoffHeader
 
     internal CoffHeader(ref PEBinaryReader reader)
     {
-        reader.Skip<ushort>();
-        NumberOfSections = reader.ReadInt16();
-        //reader.Skip((3 * sizeof(int)) + (2 * sizeof(ushort)));
-        reader.Skip(16);
+        reader.SkipNoCheck<ushort>();
+        NumberOfSections = reader.ReadInt16NoCheck();
+        reader.SkipNoCheck(16);
     }
 }

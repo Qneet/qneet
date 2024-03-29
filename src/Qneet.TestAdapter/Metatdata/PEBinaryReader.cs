@@ -17,31 +17,53 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
 {
     private readonly long m_maxOffset = size;
     private readonly byte* m_pointer = pointer;
-    private int m_currentOffset = 0;
+    private uint m_currentOffset = 0;
 
-    public void Seek(int offset)
+    public void Seek(int offset) => Seek((uint)offset);
+
+    public void Seek(uint offset)
     {
         CheckBounds(0, offset);
+        SeekNoCheck(offset);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SeekBegin()
+    {
+        m_currentOffset = 0;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SeekNoCheck(uint offset)
+    {
         m_currentOffset = offset;
     }
 
-    public void Skip(int count)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SkipNoCheck(int count) => SkipNoCheck((uint)count);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SkipNoCheck(uint count)
     {
-        CheckBounds(m_currentOffset, count);
         m_currentOffset += count;
     }
 
-    public void Skip<T>() where T : unmanaged
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void SkipNoCheck<T>() where T : unmanaged
     {
-        CheckBounds(m_currentOffset, sizeof(T));
-        m_currentOffset += sizeof(T);
+        m_currentOffset += (uint)sizeof(T);
     }
 
-    public short ReadInt16() => (short)ReadUInt16();
+    public short ReadInt16NoCheck() => (short)ReadUInt16NoCheck();
 
     public ushort ReadUInt16()
     {
         CheckBounds(sizeof(short));
+        return ReadUInt16NoCheck();
+    }
+
+    public ushort ReadUInt16NoCheck()
+    {
         var value = ReadUInt16LittleEndian(m_pointer + m_currentOffset);
         m_currentOffset += sizeof(short);
         return value;
@@ -50,16 +72,21 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ushort ReadUInt16LittleEndian(byte* source)
     {
-        return !BitConverter.IsLittleEndian ?
-            BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<ushort>(source)) :
-            Unsafe.ReadUnaligned<ushort>(source);
+        return BitConverter.IsLittleEndian
+            ? Unsafe.ReadUnaligned<ushort>(source)
+            : BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<ushort>(source));
     }
 
-    public int ReadInt32() => (int)ReadUInt32();
+    public int ReadInt32NoCheck() => (int)ReadUInt32NoCheck();
 
     public uint ReadUInt32()
     {
         CheckBounds(sizeof(uint));
+        return ReadUInt32NoCheck();
+    }
+
+    public uint ReadUInt32NoCheck()
+    {
         var value = ReadUInt32LittleEndian(m_pointer + m_currentOffset);
         m_currentOffset += sizeof(uint);
         return value;
@@ -68,9 +95,9 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static uint ReadUInt32LittleEndian(byte* source)
     {
-        return !BitConverter.IsLittleEndian ?
-            BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<uint>(source)) :
-            Unsafe.ReadUnaligned<uint>(source);
+        return BitConverter.IsLittleEndian
+            ? Unsafe.ReadUnaligned<uint>(source)
+            : BinaryPrimitives.ReverseEndianness(Unsafe.ReadUnaligned<uint>(source));
     }
 
     /// <summary>
@@ -81,12 +108,11 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
     /// between non-NUL codepoints, it is not considered to be padding and
     /// is included in the result.
     /// </summary>
-    public MemoryBlock ReadNullPaddedUTF8(int byteCount)
+    public MemoryBlock ReadNullPaddedUTF8NoCheck(uint byteCount)
     {
-        CheckBounds(m_currentOffset, byteCount);
         var bytes = m_pointer + m_currentOffset;
         m_currentOffset += byteCount;
-        var nonPaddedLength = 0;
+        uint nonPaddedLength = 0;
         for (var i = byteCount; i > 0; --i)
         {
             if (bytes[i - 1] != 0)
@@ -98,7 +124,7 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
         return new MemoryBlock(bytes, nonPaddedLength);
     }
 
-    private readonly void CheckBounds(uint count)
+    internal readonly void CheckBounds(uint count)
     {
         // Add cannot overflow because the worst case is (ulong)long.MaxValue + uint.MaxValue < ulong.MaxValue.
         if ((ulong)m_currentOffset + count > (ulong)m_maxOffset)
@@ -107,11 +133,11 @@ internal unsafe struct PEBinaryReader(byte* pointer, int size)
         }
     }
 
-    private readonly void CheckBounds(long startPosition, int count)
+    internal readonly void CheckBounds(long startPosition, uint count)
     {
         // Add cannot overflow because the worst case is (ulong)long.MaxValue + uint.MaxValue < ulong.MaxValue.
         // Negative count is handled by overflow to greater than maximum size = int.MaxValue.
-        if ((ulong)startPosition + unchecked((uint)count) > (ulong)m_maxOffset)
+        if ((ulong)startPosition + unchecked(count) > (ulong)m_maxOffset)
         {
             ThrowImageTooSmallOrContainsInvalidOffsetOrCount();
         }

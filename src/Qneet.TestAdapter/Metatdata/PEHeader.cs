@@ -11,7 +11,7 @@ internal readonly struct PEHeader
     /// </remarks>
     public readonly DirectoryEntry CorHeaderTableDirectory;
 
-    internal const int OffsetOfChecksum =
+    private const uint OffsetOfChecksum =
         sizeof(short) +                              // Magic
         sizeof(byte) +                               // MajorLinkerVersion
         sizeof(byte) +                               // MinorLinkerVersion
@@ -36,15 +36,15 @@ internal readonly struct PEHeader
         sizeof(int) +                                // SizeOfImage
         sizeof(int);                                 // SizeOfHeaders
 
-    internal static int Size(bool is32Bit) =>
-        OffsetOfChecksum +
+    internal static uint Size(bool is32Bit) =>
+        (uint)(OffsetOfChecksum +
         sizeof(int) +                                // Checksum
         sizeof(short) +                              // Subsystem
         sizeof(short) +                              // DllCharacteristics
         (4 * (is32Bit ? sizeof(int) : sizeof(long))) + // SizeOfStackReserve, SizeOfStackCommit, SizeOfHeapReserve, SizeOfHeapCommit
         sizeof(int) +                                // LoaderFlags
         sizeof(int) +                                // NumberOfRvaAndSizes
-        (16 * sizeof(long));                           // directory entries
+        (16 * sizeof(long)));                           // directory entries
 
     [SuppressMessage("Design", "MA0012:Do not raise reserved exception type", Justification = "<Pending>")]
     internal PEHeader(ref PEBinaryReader reader)
@@ -55,11 +55,13 @@ internal readonly struct PEHeader
             throw new BadImageFormatException("Unknown PE Magic value.");
         }
 
-        var skipCount = Size(magic == PEMagic.PE32) - sizeof(short) - (2 * sizeof(long));
-        reader.Skip(skipCount);
+        var size = Size(magic == PEMagic.PE32);
+        reader.CheckBounds(size - sizeof(short));
+        var skipCount = size - sizeof(short) - (2 * sizeof(long));
+        reader.SkipNoCheck(skipCount);
         CorHeaderTableDirectory = new DirectoryEntry(ref reader);
 
         // ReservedDirectory (should be 0, 0)
-        reader.Skip<long>();
+        reader.SkipNoCheck<long>();
     }
 }

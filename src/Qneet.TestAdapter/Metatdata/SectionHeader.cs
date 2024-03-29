@@ -60,11 +60,11 @@ internal readonly struct SectionHeader
 
     internal SectionHeader(ref PEBinaryReader reader)
     {
-        NameUtf8 = reader.ReadNullPaddedUTF8(NameSize);
-        VirtualSize = reader.ReadInt32();
-        VirtualAddress = reader.ReadInt32();
-        SizeOfRawData = reader.ReadInt32();
-        PointerToRawData = reader.ReadInt32();
-        reader.Skip(4 + 4 + 2 + 2 + 4);
+        NameUtf8 = reader.ReadNullPaddedUTF8NoCheck(NameSize);
+        VirtualSize = reader.ReadInt32NoCheck();
+        VirtualAddress = reader.ReadInt32NoCheck();
+        SizeOfRawData = reader.ReadInt32NoCheck();
+        PointerToRawData = reader.ReadInt32NoCheck();
+        reader.SkipNoCheck(4 + 4 + 2 + 2 + 4);
     }
 }

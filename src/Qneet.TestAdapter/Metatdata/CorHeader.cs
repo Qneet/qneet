@@ -7,10 +7,17 @@ internal readonly struct CorHeader
 {
     public readonly DirectoryEntry MetadataDirectory;
 
+    internal const uint Size =
+        sizeof(int) +
+        sizeof(ushort) +
+        sizeof(ushort) +
+        DirectoryEntry.SizeBytes +
+        4 + 4 + (DirectoryEntry.SizeBytes * 6);
+
     internal CorHeader(ref PEBinaryReader reader)
     {
-        reader.Skip(4 + 2 + 2);
+        reader.SkipNoCheck(4 + 2 + 2);
         MetadataDirectory = new DirectoryEntry(ref reader);
-        reader.Skip(4 + 4 + (8 * 6));
+        reader.SkipNoCheck(4 + 4 + (DirectoryEntry.SizeBytes * 6));
     }
 }

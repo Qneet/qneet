@@ -10,9 +10,9 @@ internal static class MetadataReaderFactory
     private static ReadOnlySpan<byte> CormetaSectionName => ".cormeta"u8;
 
     internal const ushort DosSignature = 0x5A4D;     // 'M' 'Z'
-    internal const int PESignatureOffsetLocation = 0x3C;
+    internal const uint PESignatureOffsetLocation = 0x3C;
     internal const uint PESignature = 0x00004550;    // PE00
-    internal const int PESignatureSize = sizeof(uint);
+    internal const uint PESignatureSize = sizeof(uint);
 
     internal const int SizeOfCorHeader = 72;
 
@@ -22,6 +22,7 @@ internal static class MetadataReaderFactory
 
         SkipDosHeader(ref reader, out var isCoffOnly);
 
+        reader.CheckBounds(CoffHeader.Size);
         var numberOfSections = new CoffHeader(ref reader).NumberOfSections;
 
         DirectoryEntry corHeaderTableDirectory = default;
@@ -34,6 +35,7 @@ internal static class MetadataReaderFactory
         {
             throw new BadImageFormatException("Invalid number of sections declared in PE header.");
         }
+        reader.CheckBounds((uint)(SectionHeader.Size * numberOfSections));
         Span<SectionHeader> sectionHeaders = stackalloc SectionHeader[numberOfSections];
         for (var i = 0; i < sectionHeaders.Length; i++)
         {
@@ -48,6 +50,7 @@ internal static class MetadataReaderFactory
             {
                 reader.Seek(offset);
 
+                reader.CheckBounds(CorHeader.Size);
                 metadataDirectory = new CorHeader(ref reader).MetadataDirectory;
                 hasMetadataDirectory = true;
             }
@@ -80,7 +83,7 @@ internal static class MetadataReaderFactory
             if (dosSig != 0 || reader.ReadUInt16() != 0xffff)
             {
                 isCOFFOnly = true;
-                reader.Seek(0);
+                reader.SeekBegin();
             }
             else
             {
@@ -98,7 +101,7 @@ internal static class MetadataReaderFactory
             // Skip the DOS Header
             reader.Seek(PESignatureOffsetLocation);
 
-            var ntHeaderOffset = reader.ReadInt32();
+            var ntHeaderOffset = reader.ReadUInt32();
             reader.Seek(ntHeaderOffset);
 
             // Look for PESignature "PE\0\0"
