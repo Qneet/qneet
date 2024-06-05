@@ -43,8 +43,7 @@ public sealed class DataTestCaseGenerator : IIncrementalGenerator
 
     private static MethodToGenerate? GetMethodToGenerate(GeneratorAttributeSyntaxContext context, CancellationToken ct)
     {
-        var methodSymbol = context.TargetSymbol as IMethodSymbol;
-        if (methodSymbol is null)
+        if (context.TargetSymbol is not IMethodSymbol methodSymbol)
         {
             // nothing to do if this type isn't available
             return null;
@@ -112,42 +111,41 @@ public sealed class DataTestCaseGenerator : IIncrementalGenerator
         var sb = new StringBuilder();
         if (!string.IsNullOrEmpty(methodToGenerate.Namespace))
         {
-            sb.Append("namespace ").Append(methodToGenerate.Namespace).Append(';').AppendLine();
+            _ = sb.Append("namespace ").Append(methodToGenerate.Namespace).Append(';').AppendLine();
         }
 
-        sb.Append("public ");
+        _ = sb.Append("public ");
         if (methodToGenerate.Modifiers.HasFlag(Modifiers.TypeIsStatic))
         {
-            sb.Append("static ");
+            _ = sb.Append("static ");
         }
-        sb.Append("partial ");
+        _ = sb.Append("partial ");
         if (methodToGenerate.Modifiers.HasFlag(Modifiers.TypeIsValue))
         {
-            sb.Append("struct ");
+            _ = sb.Append("struct ");
         }
         else
         {
-            sb.Append("class ");
+            _ = sb.Append("class ");
         }
-        sb.AppendLine(methodToGenerate.TypeName);
-        sb.Append('{').AppendLine()
-            ;
+        _ = sb.AppendLine(methodToGenerate.TypeName);
+        _ = sb.Append('{').AppendLine();
 
-        sb.Append("\tpublic static void ").Append(methodToGenerate.MethodName).AppendLine("()");
-        sb.AppendLine("\t{");
+        _ = sb.Append("\tpublic static void ").Append(methodToGenerate.MethodName).AppendLine("()");
+        _ = sb.AppendLine("\t{");
         if (methodToGenerate.Modifiers.HasFlag(Modifiers.TypeIsStatic))
         {
-            sb.Append("\t\t").Append(methodToGenerate.MethodName).AppendLine("(1);");
+            _ = sb.Append("\t\t").Append(methodToGenerate.MethodName).AppendLine("(1);");
         }
         else
         {
-            sb.Append("\t\t").Append("var o = new ").Append(methodToGenerate.TypeName).AppendLine("();");
-            sb.Append("\t\t").Append("o.").Append(methodToGenerate.MethodName).AppendLine("(1);");
+            _ = sb.Append("\t\t").Append("var o = new ").Append(methodToGenerate.TypeName).AppendLine("();");
+            _ = sb.Append("\t\t").Append("o.").Append(methodToGenerate.MethodName).AppendLine("(1);");
         }
 
-        sb.AppendLine("\t}");
+        _ = sb.AppendLine("\t}");
 
-        sb.Append('}');
+        _ = sb.Append('}');
 
         context.AddSource("gen.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
     }
