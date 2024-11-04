@@ -50,7 +50,7 @@ internal sealed unsafe class ReadOnlyUnmanagedMemoryStream(byte* data, int lengt
 
         set
         {
-            Seek(value, SeekOrigin.Begin);
+            _ = Seek(value, SeekOrigin.Begin);
         }
     }
 

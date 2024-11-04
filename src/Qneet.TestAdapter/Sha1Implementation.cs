@@ -200,12 +200,12 @@ internal struct Sha1Implementation
         var index = (m_count0 >> 3) & 63;
 
         /* Update number of bits */
-        if ((m_count0 += (message.Length << 3)) < (message.Length << 3))
+        if ((m_count0 += message.Length << 3) < (message.Length << 3))
         {
             m_count1++;
         }
 
-        m_count1 += (message.Length >> 29);
+        m_count1 += message.Length >> 29;
 
         var partLen = BlockBytes - index;
 

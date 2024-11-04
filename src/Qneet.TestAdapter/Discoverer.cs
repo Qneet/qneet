@@ -12,7 +12,7 @@ namespace Qneet.TestAdapter;
 internal readonly struct Discoverer(IMessageLogger messageLogger)
 {
     [StructLayout(LayoutKind.Auto)]
-    private unsafe readonly struct NativeMemoryHandle(byte* pointer, int size) : IDisposable
+    private readonly unsafe struct NativeMemoryHandle(byte* pointer, int size) : IDisposable
     {
         internal readonly byte* Pointer = pointer;
         internal readonly int Size = size;
@@ -200,7 +200,7 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         return true;
     }
 
-    private unsafe static NativeMemoryHandle ReadFile(string path)
+    private static unsafe NativeMemoryHandle ReadFile(string path)
     {
         using var handle = File.OpenHandle(path, FileMode.Open, FileAccess.Read, FileShare.Read);
         var size = RandomAccess.GetLength(handle);
@@ -210,7 +210,7 @@ internal readonly struct Discoverer(IMessageLogger messageLogger)
         return new((byte*)bufferPointer, readSize);
     }
 
-    private unsafe static bool TryGetMetadataReader(NativeMemoryHandle memoryHandle, [MaybeNullWhen(false)] out MetadataReader metadataReader)
+    private static unsafe bool TryGetMetadataReader(NativeMemoryHandle memoryHandle, [MaybeNullWhen(false)] out MetadataReader metadataReader)
     {
 
         return MetadataReaderFactory.TryGetMetadaReader(memoryHandle.Pointer, memoryHandle.Size, isLoadedImage: false, out metadataReader);

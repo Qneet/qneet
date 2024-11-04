@@ -84,7 +84,7 @@ public sealed class VsTestExecutor : ITestExecutor
             testCaseCollector.Clear();
         }
 
-        countdownEvent.Signal();
+        _ = countdownEvent.Signal();
 
         countdownEvent.Wait(cancellationSource.Token);
         cancellationSource.Cancel(throwOnFirstException: false);
@@ -108,7 +108,7 @@ public sealed class VsTestExecutor : ITestExecutor
             countdownEvent.AddCount();
             var executor = new TestCaseExecutor(module, test, frameworkHandle, countdownEvent, cancellationToken);
             //executor.Execute();
-            ThreadPool.UnsafeQueueUserWorkItem(executor, preferLocal: false);
+            _ = ThreadPool.UnsafeQueueUserWorkItem(executor, preferLocal: false);
         }
     }
 
@@ -223,7 +223,7 @@ internal sealed class TestCaseExecutor(Module module, TestCase testCase, IFramew
         }
         finally
         {
-            m_countdownEvent.Signal();
+            _ = m_countdownEvent.Signal();
         }
     }
 }

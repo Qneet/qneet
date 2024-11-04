@@ -18,9 +18,7 @@ public static class DataTestCaseGeneratorTests
                 public void Test(int a) => throw new NotImplementedException();
             }
             """;
-#pragma warning disable S1481 // Unused local variables should be removed
-        var (diagnostics, output) = TestHelpers.GetGeneratedOutput<DataTestCaseGenerator>(input);
-#pragma warning restore S1481 // Unused local variables should be removed
+        var (diagnostics, _) = TestHelpers.GetGeneratedOutput<DataTestCaseGenerator>(input);
 
         Assert.Empty(diagnostics);
     }
