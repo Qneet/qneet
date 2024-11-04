@@ -16,8 +16,12 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
   <PropertyGroup>
-    <IsPackable>false</IsPackable>
+    <VersionPrefix>0.0.1</VersionPrefix>
+	<PackageProjectUrl>https://github.com/Qneet/qneet</PackageProjectUrl>
+	<RepositoryUrl>https://github.com/Qneet/qneet</RepositoryUrl>
+	<RepositoryType>git</RepositoryType>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+	<Tags>test</Tags>
   </PropertyGroup>
 	<PropertyGroup>
 		<CodeAnalysisTreatWarningsAsErrors>true</CodeAnalysisTreatWarningsAsErrors>

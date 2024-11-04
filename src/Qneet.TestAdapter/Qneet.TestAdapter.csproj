@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <Title>Qneet Test Adapter</Title>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
