@@ -5,7 +5,7 @@
     <!--<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>-->
   </PropertyGroup>
   <ItemGroup>
-    <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.163" />
+    <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.177" />
     <GlobalPackageReference Include="AsyncFixer" Version="1.6.0" />
     <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="9.32.0.97167" />
   </ItemGroup>
