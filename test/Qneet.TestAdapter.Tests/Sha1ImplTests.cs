@@ -7,6 +7,7 @@ using Xunit;
 namespace Qneet.TestAdapter.Tests;
 
 [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "<Pending>")]
+[SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "It's test")]
 public static class Sha1ImplTests
 {
     private static readonly char[] s_lookupTableLower =

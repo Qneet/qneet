@@ -2,6 +2,7 @@ using Xunit;
 
 namespace Qneet.Generators.Tests;
 
+[SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "It's test")]
 public static class DataTestCaseGeneratorTests
 {
     [SuppressMessage("Usage", "MA0136:Raw String contains an implicit end of line character", Justification = "<Pending>")]

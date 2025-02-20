@@ -4,6 +4,7 @@ using Xunit;
 namespace Qneet.TestAdapter.Tests;
 
 [SuppressMessage("Naming", "CA1707:Identifiers should not contain underscores", Justification = "Test names can have underscore")]
+[SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "It's test")]
 public static class TestIdProviderTests
 {
     public static void IdCompatibilityTests1()

@@ -393,6 +393,8 @@ dotnet_diagnostic.MA0004.severity = none
 dotnet_diagnostic.MA0032.severity = error
 ### MA0080: Use a cancellation token using .WithCancellation()
 dotnet_diagnostic.MA0080.severity = error
+### MA0165: Make interpolated string
+dotnet_diagnostic.MA0165.severity = none
 
 # Sonar analyzer rules
 

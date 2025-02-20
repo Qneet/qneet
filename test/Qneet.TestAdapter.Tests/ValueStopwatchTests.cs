@@ -3,6 +3,7 @@ using Xunit;
 namespace Qneet.TestAdapter.Tests;
 
 [SuppressMessage("Performance", "CA1815:Override equals and operator equals on value types", Justification = "<Pending>")]
+[SuppressMessage("Maintainability", "CA1515:Consider making public types internal", Justification = "It's test")]
 public struct ValueStopwatchTests
 {
     public static void GetElapsedTimeThrowExceptionWhenDefaultConstructorUsed()
