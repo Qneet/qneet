@@ -5,15 +5,15 @@
     <!--<CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>-->
   </PropertyGroup>
   <ItemGroup>
-    <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.188" />
+    <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.220" />
     <GlobalPackageReference Include="AsyncFixer" Version="1.6.0" />
-    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.6.0.109712" />
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.15.0.120848" />
   </ItemGroup>
   <ItemGroup>
-    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.12.0" />
-    <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="17.13.0" />
-    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="17.14.1" />
+    <PackageVersion Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageVersion Include="xunit.assert" Version="2.9.3" />
   </ItemGroup>
 </Project>
