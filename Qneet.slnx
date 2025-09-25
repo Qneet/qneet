@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="src/Qneet.Attributes/Qneet.Attributes.csproj" />
+  <Project Path="src/Qneet.Generators/Qneet.Generators.csproj" />
+  <Project Path="src/Qneet.TestAdapter/Qneet.TestAdapter.csproj" />
+  <Project Path="test/Qneet.Generators.Tests/Qneet.Generators.Tests.csproj" />
+  <Project Path="test/Qneet.TestAdapter.Tests/Qneet.TestAdapter.Tests.csproj" />
+</Solution>
