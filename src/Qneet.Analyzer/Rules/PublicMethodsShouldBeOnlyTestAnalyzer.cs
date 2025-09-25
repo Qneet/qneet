@@ -19,7 +19,7 @@ public sealed class PublicMethodsShouldBeOnlyTestAnalyzer : DiagnosticAnalyzer
 
     private static readonly Action<SymbolAnalysisContext> s_handleAnalyzeToStringExists = AnalyzeSymbol;
 
-    private static readonly ImmutableArray<SymbolKind> s_methodDeclaration = [SymbolKind.Method];
+    private static readonly ImmutableArray<SymbolKind> s_methodDeclaration = [SymbolKind.NamedType];
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => s_supportedDiagnostics;
 
@@ -42,7 +42,7 @@ public sealed class PublicMethodsShouldBeOnlyTestAnalyzer : DiagnosticAnalyzer
             return;
 
         // Skip if name doesn't end with "Test"
-        if (!namedTypeSymbol.Name.EndsWith("Test", StringComparison.Ordinal))
+        if (!namedTypeSymbol.Name.EndsWith("Tests", StringComparison.Ordinal))
             return;
 
         // Check all public methods
