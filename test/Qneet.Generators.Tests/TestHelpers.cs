@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
 namespace Qneet.Generators.Tests;
+
 internal static class TestHelpers
 {
     public static (ImmutableArray<Diagnostic> Diagnostics, string Output) GetGeneratedOutput<T>(params string[] source)

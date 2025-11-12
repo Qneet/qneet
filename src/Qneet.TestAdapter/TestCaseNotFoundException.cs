@@ -1,4 +1,5 @@
 namespace Qneet.TestAdapter;
+
 [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "Test case name is mandatory")]
 public sealed class TestCaseNotFoundException : QneetException
 {

@@ -1,4 +1,5 @@
 namespace Qneet.TestAdapter;
+
 [SuppressMessage("Design", "CA1032:Implement standard exception constructors", Justification = "Should not have default constructor")]
 public abstract class QneetException : Exception
 {
