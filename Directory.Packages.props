@@ -7,7 +7,7 @@
   <ItemGroup>
     <GlobalPackageReference Include="Meziantou.Analyzer" Version="2.0.257" />
     <GlobalPackageReference Include="AsyncFixer" Version="1.6.0" />
-    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.15.0.120848" />
+    <GlobalPackageReference Include="SonarAnalyzer.CSharp" Version="10.18.0.131500" />
   </ItemGroup>
   <ItemGroup>
     <PackageVersion Include="Microsoft.TestPlatform.ObjectModel" Version="18.0.1" />
